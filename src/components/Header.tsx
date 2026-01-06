@@ -1,5 +1,6 @@
-import { Film, Menu, Search, X } from "lucide-react";
+import { Film, Heart, Menu, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useFavorites } from "../contexts/FavoritesContext";
 import { getImageUrl, searchMulti } from "../services/tmdb";
 import type { Movie, TVShow } from "../types/tmdb";
 
@@ -9,8 +10,14 @@ function isMovie(result: SearchResult): result is Movie {
   return "title" in result;
 }
 
-export function Header() {
+interface HeaderProps {
+  onNavigate: (page: "home" | "catalog" | "favorites") => void;
+  currentPage: string;
+}
+
+export function Header({ onNavigate, currentPage }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { favorites } = useFavorites();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -74,30 +81,33 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-8">
-            <a
-              href="#"
-              className="text-foreground hover:text-primary transition-colors duration-300"
+            <button
+              onClick={() => onNavigate("home")}
+              className={`transition-colors duration-300 ${currentPage === "home"
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-primary"
+                }`}
             >
               Início
-            </a>
-            <a
-              href="#"
-              className="text-muted-foreground hover:text-primary transition-colors duration-300"
+            </button>
+            <button
+              onClick={() => onNavigate("catalog")}
+              className={`transition-colors duration-300 ${currentPage === "catalog"
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-primary"
+                }`}
             >
               Catálogo
-            </a>
-            <a
-              href="#"
-              className="text-muted-foreground hover:text-primary transition-colors duration-300"
+            </button>
+            <button
+              onClick={() => onNavigate("favorites")}
+              className={`transition-colors duration-300 ${currentPage === "favorites"
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-primary"
+                }`}
             >
-              Gêneros
-            </a>
-            <a
-              href="#"
-              className="text-muted-foreground hover:text-primary transition-colors duration-300"
-            >
-              Tendências
-            </a>
+              Favoritos
+            </button>
           </nav>
 
           {/* Search and CTA */}
@@ -131,10 +141,13 @@ export function Header() {
                   ) : searchResults.length > 0 ? (
                     <div className="py-2">
                       {searchResults.map((result) => (
-                        <a
+                        <button
                           key={result.id}
-                          href="#"
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors duration-200"
+                          onClick={() => {
+                            clearSearch();
+                            onNavigate("catalog");
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors duration-200 text-left"
                         >
                           <img
                             src={getImageUrl(result.poster_path, "w200")}
@@ -152,7 +165,7 @@ export function Header() {
                               }
                             </p>
                           </div>
-                        </a>
+                        </button>
                       ))}
                     </div>
                   ) : (
@@ -164,8 +177,25 @@ export function Header() {
               )}
             </div>
 
+            {/* Favorites Button */}
+            <button
+              onClick={() => onNavigate("favorites")}
+              className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-full glass border border-border hover:border-primary/50 transition-all duration-300 relative"
+            >
+              <Heart className={`w-5 h-5 ${favorites.length > 0 ? "text-red-500 fill-current" : ""
+                }`} />
+              {favorites.length > 0 && (
+                <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-xs rounded-full bg-red-500 text-white min-w-[20px] text-center">
+                  {favorites.length}
+                </span>
+              )}
+            </button>
+
             {/* CTA Button */}
-            <button className="hidden lg:block px-6 py-2 rounded-full bg-gradient-to-r from-primary to-cyan-500 text-primary-foreground hover:shadow-lg hover:shadow-primary/50 transition-all duration-300">
+            <button
+              onClick={() => onNavigate("catalog")}
+              className="hidden lg:block px-6 py-2 rounded-full bg-gradient-to-r from-primary to-cyan-500 text-primary-foreground hover:shadow-lg hover:shadow-primary/50 transition-all duration-300"
+            >
               Explorar
             </button>
 
@@ -206,10 +236,14 @@ export function Header() {
                   <div className="mt-2 glass-strong rounded-xl border border-border overflow-hidden">
                     <div className="py-2">
                       {searchResults.map((result) => (
-                        <a
+                        <button
                           key={result.id}
-                          href="#"
-                          className="flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors duration-200"
+                          onClick={() => {
+                            clearSearch();
+                            setMobileMenuOpen(false);
+                            onNavigate("catalog");
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors duration-200 text-left"
                         >
                           <img
                             src={getImageUrl(result.poster_path, "w200")}
@@ -227,7 +261,7 @@ export function Header() {
                               }
                             </p>
                           </div>
-                        </a>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -236,34 +270,52 @@ export function Header() {
 
               {/* Mobile Navigation Links */}
               <nav className="flex flex-col gap-3">
-                <a
-                  href="#"
-                  className="text-foreground hover:text-primary transition-colors duration-300 py-2"
+                <button
+                  onClick={() => {
+                    onNavigate("home");
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`text-left transition-colors duration-300 py-2 ${currentPage === "home"
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-primary"
+                    }`}
                 >
                   Início
-                </a>
-                <a
-                  href="#"
-                  className="text-muted-foreground hover:text-primary transition-colors duration-300 py-2"
+                </button>
+                <button
+                  onClick={() => {
+                    onNavigate("catalog");
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`text-left transition-colors duration-300 py-2 ${currentPage === "catalog"
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-primary"
+                    }`}
                 >
                   Catálogo
-                </a>
-                <a
-                  href="#"
-                  className="text-muted-foreground hover:text-primary transition-colors duration-300 py-2"
+                </button>
+                <button
+                  onClick={() => {
+                    onNavigate("favorites");
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`text-left transition-colors duration-300 py-2 ${currentPage === "favorites"
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-primary"
+                    }`}
                 >
-                  Gêneros
-                </a>
-                <a
-                  href="#"
-                  className="text-muted-foreground hover:text-primary transition-colors duration-300 py-2"
-                >
-                  Tendências
-                </a>
+                  Favoritos {favorites.length > 0 && `(${favorites.length})`}
+                </button>
               </nav>
 
               {/* Mobile CTA */}
-              <button className="w-full px-6 py-3 rounded-full bg-gradient-to-r from-primary to-cyan-500 text-primary-foreground hover:shadow-lg hover:shadow-primary/50 transition-all duration-300">
+              <button
+                onClick={() => {
+                  onNavigate("catalog");
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full px-6 py-3 rounded-full bg-gradient-to-r from-primary to-cyan-500 text-primary-foreground hover:shadow-lg hover:shadow-primary/50 transition-all duration-300"
+              >
                 Explorar
               </button>
             </div>

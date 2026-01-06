@@ -1,7 +1,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --font-size: 16px;
+  --font-size: 18px;
   --background: #0a0a0f;
   --foreground: #f5f5f7;
   --card: rgba(20, 20, 30, 0.4);
@@ -216,4 +216,55 @@ html {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 217, 255, 0.5);
+}
+
+/* Hide scrollbar utility */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent content shift on modal open */
+body.modal-open {
+  overflow: hidden;
+  padding-right: var(--scrollbar-width, 0px);
+}
+
+/* Better text rendering */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Improve image rendering */
+img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Touch-friendly interactive elements */
+@media (hover: none) and (pointer: coarse) {
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }

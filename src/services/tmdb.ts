@@ -178,6 +178,130 @@ export async function discoverTVShowsByGenre(
     return data.results;
 }
 
+// ============ BUSCA AVANÇADA COM FILTROS ============
+
+export interface DiscoverFilters {
+    genres?: number[];
+    sortBy?: string;
+    yearFrom?: string;
+    yearTo?: string;
+    ratingMin?: number;
+}
+
+export async function discoverMoviesAdvanced(
+    filters: DiscoverFilters,
+    maxPages: number = 5
+): Promise<{ results: Movie[]; totalResults: number }> {
+    const {
+        genres = [],
+        sortBy = "popularity.desc",
+        yearFrom,
+        yearTo,
+        ratingMin,
+    } = filters;
+
+    // Construir parâmetros da query
+    let params = `sort_by=${sortBy}`;
+
+    if (genres.length > 0) {
+        params += `&with_genres=${genres.join(",")}`;
+    }
+
+    if (yearFrom) {
+        params += `&primary_release_date.gte=${yearFrom}-01-01`;
+    }
+
+    if (yearTo) {
+        params += `&primary_release_date.lte=${yearTo}-12-31`;
+    }
+
+    if (ratingMin && ratingMin > 0) {
+        params += `&vote_average.gte=${ratingMin}`;
+    }
+
+    // Buscar múltiplas páginas
+    const allResults: Movie[] = [];
+    let totalResults = 0;
+
+    for (let page = 1; page <= maxPages; page++) {
+        try {
+            const data = await fetchFromTMDB<TMDBResponse<Movie>>(
+                `/discover/movie?${params}&page=${page}`
+            );
+
+            allResults.push(...data.results);
+            totalResults = data.total_results;
+
+            // Parar se não houver mais páginas
+            if (page >= data.total_pages) {
+                break;
+            }
+        } catch (error) {
+            console.error(`Erro ao buscar página ${page}:`, error);
+            break;
+        }
+    }
+
+    return { results: allResults, totalResults };
+}
+
+export async function discoverTVShowsAdvanced(
+    filters: DiscoverFilters,
+    maxPages: number = 5
+): Promise<{ results: TVShow[]; totalResults: number }> {
+    const {
+        genres = [],
+        sortBy = "popularity.desc",
+        yearFrom,
+        yearTo,
+        ratingMin,
+    } = filters;
+
+    // Construir parâmetros da query
+    let params = `sort_by=${sortBy}`;
+
+    if (genres.length > 0) {
+        params += `&with_genres=${genres.join(",")}`;
+    }
+
+    if (yearFrom) {
+        params += `&first_air_date.gte=${yearFrom}-01-01`;
+    }
+
+    if (yearTo) {
+        params += `&first_air_date.lte=${yearTo}-12-31`;
+    }
+
+    if (ratingMin && ratingMin > 0) {
+        params += `&vote_average.gte=${ratingMin}`;
+    }
+
+    // Buscar múltiplas páginas
+    const allResults: TVShow[] = [];
+    let totalResults = 0;
+
+    for (let page = 1; page <= maxPages; page++) {
+        try {
+            const data = await fetchFromTMDB<TMDBResponse<TVShow>>(
+                `/discover/tv?${params}&page=${page}`
+            );
+
+            allResults.push(...data.results);
+            totalResults = data.total_results;
+
+            // Parar se não houver mais páginas
+            if (page >= data.total_pages) {
+                break;
+            }
+        } catch (error) {
+            console.error(`Erro ao buscar página ${page}:`, error);
+            break;
+        }
+    }
+
+    return { results: allResults, totalResults };
+}
+
 // ============ BUSCA MULTI ============
 
 export async function searchMulti(

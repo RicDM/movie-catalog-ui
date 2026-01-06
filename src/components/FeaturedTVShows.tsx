@@ -1,13 +1,15 @@
 import { Tv } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useGenres } from "../hooks/useGenres";
-import { getImageUrl, getPopularTVShows, getYearFromDate } from "../services/tmdb";
-import type { TVShow } from "../types/tmdb";
+import { getPopularTVShows } from "../services/tmdb";
+import type { Movie, TVShow } from "../types/tmdb";
 import { MovieCard } from "./MovieCard";
+import { MovieDetailsModal } from "./MovieDetailsModal";
 
 export function FeaturedTVShows() {
     const [shows, setShows] = useState<TVShow[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedShow, setSelectedShow] = useState<Movie | TVShow | null>(null);
     const { getGenreNames, loading: genresLoading } = useGenres();
 
     useEffect(() => {
@@ -43,7 +45,7 @@ export function FeaturedTVShows() {
                             </p>
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 lg:gap-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6">
                         {[...Array(12)].map((_, i) => (
                             <div key={i} className="aspect-[2/3] bg-accent rounded-xl animate-pulse" />
                         ))}
@@ -75,15 +77,12 @@ export function FeaturedTVShows() {
                 </div>
 
                 {/* TV Shows Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 lg:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6">
                     {shows.map((show) => (
                         <MovieCard
                             key={show.id}
-                            title={show.name}
-                            genre={getGenreNames(show.genre_ids, "tv")}
-                            rating={parseFloat(show.vote_average.toFixed(1))}
-                            year={getYearFromDate(show.first_air_date)}
-                            image={getImageUrl(show.poster_path)}
+                            item={show}
+                            onOpenDetails={setSelectedShow}
                         />
                     ))}
                 </div>
@@ -95,6 +94,15 @@ export function FeaturedTVShows() {
                     </button>
                 </div>
             </div>
+
+            {/* Details Modal */}
+            {selectedShow && (
+                <MovieDetailsModal
+                    item={selectedShow}
+                    isOpen={!!selectedShow}
+                    onClose={() => setSelectedShow(null)}
+                />
+            )}
         </section>
     );
 }

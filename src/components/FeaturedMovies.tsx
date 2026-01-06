@@ -1,13 +1,15 @@
 import { TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useGenres } from "../hooks/useGenres";
-import { getImageUrl, getPopularMovies, getYearFromDate } from "../services/tmdb";
+import { getPopularMovies } from "../services/tmdb";
 import type { Movie } from "../types/tmdb";
 import { MovieCard } from "./MovieCard";
+import { MovieDetailsModal } from "./MovieDetailsModal";
 
 export function FeaturedMovies() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const { getGenreNames, loading: genresLoading } = useGenres();
 
   useEffect(() => {
@@ -43,7 +45,7 @@ export function FeaturedMovies() {
               </p>
             </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 lg:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6">
             {[...Array(12)].map((_, i) => (
               <div key={i} className="aspect-[2/3] bg-accent rounded-xl animate-pulse" />
             ))}
@@ -75,15 +77,12 @@ export function FeaturedMovies() {
         </div>
 
         {/* Movies Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 lg:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6">
           {movies.map((movie) => (
             <MovieCard
               key={movie.id}
-              title={movie.title}
-              genre={getGenreNames(movie.genre_ids, "movie")}
-              rating={parseFloat(movie.vote_average.toFixed(1))}
-              year={getYearFromDate(movie.release_date)}
-              image={getImageUrl(movie.poster_path)}
+              item={movie}
+              onOpenDetails={(item) => setSelectedMovie(item as Movie)}
             />
           ))}
         </div>
@@ -95,6 +94,15 @@ export function FeaturedMovies() {
           </button>
         </div>
       </div>
+
+      {/* Details Modal */}
+      {selectedMovie && (
+        <MovieDetailsModal
+          item={selectedMovie}
+          isOpen={!!selectedMovie}
+          onClose={() => setSelectedMovie(null)}
+        />
+      )}
     </section>
   );
 }

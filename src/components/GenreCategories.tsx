@@ -57,9 +57,9 @@ export function GenreCategories() {
               Encontre seu próximo filme favorito
             </p>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-4">
+          <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 hide-scrollbar">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="w-32 h-40 lg:w-40 lg:h-48 bg-accent rounded-2xl animate-pulse flex-shrink-0" />
+              <div key={i} className="w-28 h-36 md:w-32 md:h-40 lg:w-40 lg:h-48 bg-accent rounded-2xl animate-pulse flex-shrink-0" />
             ))}
           </div>
         </div>
@@ -82,7 +82,7 @@ export function GenreCategories() {
 
         {/* Genres Scroll Container */}
         <div className="relative">
-          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
+          <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory hide-scrollbar">
             {genres.map((genre) => {
               const genreConfig = genreIcons[genre.name] || { icon: Film, color: "from-gray-500 to-slate-500" };
               const Icon = genreConfig.icon;
@@ -91,7 +91,7 @@ export function GenreCategories() {
                   key={genre.id}
                   className="group relative flex-shrink-0 snap-start"
                 >
-                  <div className="relative w-32 h-40 lg:w-40 lg:h-48 rounded-2xl glass border border-border hover:border-primary/50 overflow-hidden transition-all duration-300 hover:scale-105">
+                  <div className="relative w-28 h-36 md:w-32 md:h-40 lg:w-40 lg:h-48 rounded-2xl glass border border-border hover:border-primary/50 overflow-hidden transition-all duration-300 hover:scale-105">
                     {/* Background Gradient */}
                     <div className={`absolute inset-0 bg-gradient-to-br ${genreConfig.color} opacity-10 group-hover:opacity-20 transition-opacity duration-300`} />
 
@@ -118,7 +118,7 @@ export function GenreCategories() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }

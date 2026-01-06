@@ -8,6 +8,7 @@ import {
 } from "../services/tmdb";
 import type { Movie, MovieDetails } from "../types/tmdb";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { MovieDetailsModal } from "./MovieDetailsModal";
 
 interface MovieWithDetails extends Movie {
   details?: MovieDetails;
@@ -16,6 +17,7 @@ interface MovieWithDetails extends Movie {
 export function NewReleases() {
   const [movies, setMovies] = useState<MovieWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
   useEffect(() => {
     async function loadNewReleases() {
@@ -78,9 +80,9 @@ export function NewReleases() {
               </p>
             </div>
           </div>
-          <div className="flex gap-4 lg:gap-6 overflow-x-auto pb-4">
+          <div className="flex gap-3 md:gap-4 lg:gap-6 overflow-x-auto pb-4 hide-scrollbar">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="w-72 lg:w-80 h-40 bg-accent rounded-2xl animate-pulse flex-shrink-0" />
+              <div key={i} className="w-64 md:w-72 lg:w-80 h-36 md:h-40 bg-accent rounded-2xl animate-pulse flex-shrink-0" />
             ))}
           </div>
         </div>
@@ -108,58 +110,60 @@ export function NewReleases() {
 
         {/* Releases Scroll Container */}
         <div className="relative">
-          <div className="flex gap-4 lg:gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
+          <div className="flex gap-3 md:gap-4 lg:gap-6 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory hide-scrollbar">
             {movies.map((movie) => (
               <div
                 key={movie.id}
-                className="group relative flex-shrink-0 w-72 lg:w-80 snap-start cursor-pointer"
+                onClick={() => setSelectedMovie(movie)}
+                className="group relative flex-shrink-0 w-64 md:w-72 lg:w-80 snap-start cursor-pointer"
               >
                 <div className="glass rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-primary/20 transition-all duration-500 hover:scale-[1.02]">
-                  <div className="flex gap-4 p-4">
+                  <div className="flex gap-3 md:gap-4 p-3 md:p-4">
                     {/* Poster */}
-                    <div className="relative w-24 h-36 flex-shrink-0 rounded-lg overflow-hidden">
+                    <div className="relative w-20 h-32 md:w-24 md:h-36 flex-shrink-0 rounded-lg overflow-hidden">
                       <ImageWithFallback
                         src={getImageUrl(movie.poster_path, "w200")}
                         alt={movie.title}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        style={{ minHeight: '128px' }}
                       />
                       {/* New Badge */}
-                      <div className="absolute top-2 left-2 px-2 py-1 rounded-md bg-primary text-primary-foreground text-xs font-medium">
+                      <div className="absolute top-1 md:top-2 left-1 md:left-2 px-1.5 md:px-2 py-0.5 md:py-1 rounded-md bg-primary text-primary-foreground text-[10px] md:text-xs font-medium">
                         NOVO
                       </div>
                     </div>
 
                     {/* Info */}
                     <div className="flex-1 flex flex-col justify-between py-1">
-                      <div className="space-y-2">
-                        <h3 className="text-base font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-300">
+                      <div className="space-y-1 md:space-y-2">
+                        <h3 className="text-sm md:text-base font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors duration-300">
                           {movie.title}
                         </h3>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-[10px] md:text-xs text-muted-foreground line-clamp-1">
                           {movie.details?.genres.map(g => g.name).join(", ") || "Carregando..."}
                         </p>
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="space-y-1.5 md:space-y-2">
                         {/* Rating */}
                         <div className="flex items-center gap-1">
-                          <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                          <span className="text-xs text-foreground">
+                          <Star className="w-2.5 h-2.5 md:w-3 md:h-3 text-yellow-400 fill-yellow-400" />
+                          <span className="text-[10px] md:text-xs text-foreground font-medium">
                             {movie.vote_average.toFixed(1)}
                           </span>
-                          <span className="text-xs text-muted-foreground ml-1">
+                          <span className="text-[10px] md:text-xs text-muted-foreground ml-1">
                             {getYearFromDate(movie.release_date)}
                           </span>
                         </div>
 
                         {/* Duration & Release */}
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-2 md:gap-3 text-[10px] md:text-xs text-muted-foreground">
                           <div className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
+                            <Clock className="w-2.5 h-2.5 md:w-3 md:h-3" />
                             <span>{formatRuntime(movie.details?.runtime)}</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
+                            <Calendar className="w-2.5 h-2.5 md:w-3 md:h-3" />
                             <span>{formatReleaseDate(movie.release_date)}</span>
                           </div>
                         </div>
@@ -172,19 +176,18 @@ export function NewReleases() {
           </div>
 
           {/* Gradient Fade on Right */}
-          <div className="absolute top-0 right-0 bottom-4 w-16 bg-gradient-to-l from-background to-transparent pointer-events-none" />
+          <div className="absolute top-0 right-0 bottom-4 w-12 md:w-16 bg-gradient-to-l from-background to-transparent pointer-events-none hidden md:block" />
         </div>
       </div>
 
-      <style jsx>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
+      {/* Details Modal */}
+      {selectedMovie && (
+        <MovieDetailsModal
+          item={selectedMovie}
+          isOpen={!!selectedMovie}
+          onClose={() => setSelectedMovie(null)}
+        />
+      )}
     </section>
   );
 }
