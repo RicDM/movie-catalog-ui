@@ -23,7 +23,6 @@ export default function App() {
           <main>
             <HeroSection />
             <FeaturedMovies />
-            <GenreCategories />
             <FeaturedTVShows />
             <NewReleases />
           </main>

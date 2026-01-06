@@ -148,18 +148,18 @@ export function MovieDetailsModal({ item, isOpen, onClose }: MovieDetailsModalPr
                             <div className="flex gap-1 md:gap-2 flex-shrink-0">
                                 <button
                                     onClick={() => toggleFavorite(item, mediaType)}
-                                    className={`p-2 md:p-3 rounded-full glass border transition-all duration-300 ${isFavorite(id)
+                                    className={`p-4 md:p-3 rounded-full glass border transition-all duration-300 ${isFavorite(id)
                                         ? "border-red-500 text-red-500 bg-red-500/10"
-                                        : "border-border text-muted-foreground hover:text-foreground bg-background/60"
+                                        : "border-border text-muted-foreground hover:text-foreground bg-background/60 p-4"
                                         }`}
                                     aria-label="Favoritar"
                                 >
                                     <Heart className={`w-4 h-4 md:w-5 md:h-5 ${isFavorite(id) ? "fill-current" : ""}`} />
                                 </button>
-                                <button className="p-2 md:p-3 rounded-full glass border border-border text-muted-foreground hover:text-foreground transition-colors bg-background/60" aria-label="Salvar">
+                                <button className="p-2 md:p-3 rounded-full glass border border-border text-muted-foreground hover:text-foreground transition-colors bg-background/60 p-4" aria-label="Salvar">
                                     <Bookmark className="w-4 h-4 md:w-5 md:h-5" />
                                 </button>
-                                <button className="p-2 md:p-3 rounded-full glass border border-border text-muted-foreground hover:text-foreground transition-colors bg-background/60" aria-label="Compartilhar">
+                                <button className="p-2 md:p-3 rounded-full glass border border-border text-muted-foreground hover:text-foreground transition-colors bg-background/60 p-4" aria-label="Compartilhar">
                                     <Share2 className="w-4 h-4 md:w-5 md:h-5" />
                                 </button>
                             </div>
@@ -167,17 +167,17 @@ export function MovieDetailsModal({ item, isOpen, onClose }: MovieDetailsModalPr
 
                         {/* Meta Info */}
                         <div className="flex flex-wrap gap-2 mb-3 md:mb-4">
-                            <div className="flex items-center gap-1.5 px-2.5 md:px-3 py-1 md:py-1.5 rounded-full glass border border-primary/30 bg-background/60">
-                                <Star className="w-3 h-3 md:w-4 md:h-4 text-yellow-400 fill-yellow-400" />
-                                <span className="text-foreground font-semibold text-xs md:text-sm">{details.vote_average.toFixed(1)}</span>
+                            <div className="flex items-center gap-1.5 px-2.5 md:px-3 py-1 md:py-1.5 rounded-full glass border border-primary/30 bg-background/60 p-2">
+                                <Star className="w-5 h-5 md:w-4 md:h-4 text-yellow-400 fill-yellow-400" />
+                                <span className="text-foreground font-semibold text-s md:text-sm">{details.vote_average.toFixed(1)}</span>
                             </div>
-                            <div className="flex items-center gap-1.5 px-2.5 md:px-3 py-1 md:py-1.5 rounded-full glass bg-background/60">
-                                <Calendar className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground" />
-                                <span className="text-foreground text-xs md:text-sm">{getYearFromDate(releaseDate)}</span>
+                            <div className="flex items-center gap-1.5 px-2.5 md:px-3 py-1 md:py-1.5 rounded-full glass bg-background/60 p-2">
+                                <Calendar className="w-5 h-5 md:w-4 md:h-4 text-muted-foreground" />
+                                <span className="text-foreground text-s md:text-sm">{getYearFromDate(releaseDate)}</span>
                             </div>
-                            <div className="flex items-center gap-1.5 px-2.5 md:px-3 py-1 md:py-1.5 rounded-full glass bg-background/60">
-                                <Clock className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground" />
-                                <span className="text-foreground text-xs md:text-sm">{runtime}</span>
+                            <div className="flex items-center gap-1.5 px-2.5 md:px-3 py-1 md:py-1.5 rounded-full glass bg-background/60 p-2">
+                                <Clock className="w-5 h-5 md:w-4 md:h-4 text-muted-foreground" />
+                                <span className="text-foreground text-s md:text-sm">{runtime}</span>
                             </div>
                         </div>
 
@@ -196,13 +196,13 @@ export function MovieDetailsModal({ item, isOpen, onClose }: MovieDetailsModalPr
                         {/* Overview */}
                         <div className="mb-3 md:mb-4">
                             <h2 className="text-base md:text-lg font-semibold text-foreground mb-1 md:mb-2">Sinopse</h2>
-                            <p className="text-muted-foreground text-xs md:text-sm leading-relaxed">{details.overview}</p>
+                            <p className="text-muted-foreground text-s md:text-sm leading-relaxed">{details.overview}</p>
                         </div>
 
                         {/* Informações */}
                         <div className="mb-3 md:mb-4">
                             <h3 className="text-base md:text-lg font-semibold text-foreground mb-1 md:mb-2">Informações</h3>
-                            <div className="space-y-1 text-xs md:text-sm">
+                            <div className="space-y-1 text-s md:text-sm">
                                 <div>
                                     <span className="text-muted-foreground">Idioma: </span>
                                     <span className="text-foreground">{details.original_language.toUpperCase()}</span>
@@ -238,7 +238,7 @@ export function MovieDetailsModal({ item, isOpen, onClose }: MovieDetailsModalPr
                                 <h3 className="text-base md:text-lg font-semibold text-foreground mb-1 md:mb-2">Produção</h3>
                                 <div className="flex flex-wrap gap-2">
                                     {details.production_companies.slice(0, 4).map((company) => (
-                                        <span key={company.id} className="text-xs text-muted-foreground font-medium">
+                                        <span key={company.id} className="text-s text-muted-foreground font-medium">
                                             {company.name}
                                         </span>
                                     ))}

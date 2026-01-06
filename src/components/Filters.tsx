@@ -81,7 +81,7 @@ export function Filters({
 
             {/* Filters Panel */}
             {showFilters && (
-                <div className="glass-strong rounded-2xl p-6 space-y-6 animate-in slide-in-from-top-4 duration-300">
+                <div className="glass-strong rounded-2xl px-6 animate-in slide-in-from-top-4 duration-300 mt-4 py-6 space-y-6">
                     {/* Sort By */}
                     <div>
                         <label className="block text-sm font-medium text-foreground mb-3">

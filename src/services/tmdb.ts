@@ -13,7 +13,6 @@ const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 const BASE_URL = "https://api.themoviedb.org/3";
 const IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
 
-// Verificar se a API Key está configurada
 if (!API_KEY) {
     console.error(
         "TMDB API Key não encontrada. Configure a variável VITE_TMDB_API_KEY no arquivo .env"

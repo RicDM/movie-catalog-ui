@@ -62,7 +62,7 @@ export function CatalogPage() {
                             yearFrom,
                             yearTo,
                             ratingMin,
-                        }, 5); // Buscar até 5 páginas da API (100 resultados)
+                        }, 5);
 
                         results = filteredMovies;
                     } else {
@@ -88,7 +88,7 @@ export function CatalogPage() {
                             yearFrom,
                             yearTo,
                             ratingMin,
-                        }, 5); // Buscar até 5 páginas da API (100 resultados)
+                        }, 5);
 
                         results = filteredTVShows;
                     } else {

@@ -120,12 +120,12 @@ export function NewReleases() {
                 <div className="glass rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-primary/20 transition-all duration-500 hover:scale-[1.02]">
                   <div className="flex gap-3 md:gap-4 p-3 md:p-4">
                     {/* Poster */}
-                    <div className="relative w-20 h-32 md:w-24 md:h-36 flex-shrink-0 rounded-lg overflow-hidden">
+                    <div className="relative w-24 h-32 md:w-24 md:h-36 flex-shrink-0 rounded-lg overflow-hidden">
                       <ImageWithFallback
                         src={getImageUrl(movie.poster_path, "w200")}
                         alt={movie.title}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        style={{ minHeight: '128px' }}
+                        style={{ minHeight: '96px' }}
                       />
                       {/* New Badge */}
                       <div className="absolute top-1 md:top-2 left-1 md:left-2 px-1.5 md:px-2 py-0.5 md:py-1 rounded-md bg-primary text-primary-foreground text-[10px] md:text-xs font-medium">

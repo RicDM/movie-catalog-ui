@@ -34,7 +34,7 @@ export function MovieCard({ item, onOpenDetails }: MovieCardProps) {
       onClick={() => onOpenDetails(item)}
     >
       {/* Image Container */}
-      <div className="aspect-[2/3] relative overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900">
+      <div className="aspect-[2/3] relative overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 ">
         <img
           src={getImageUrl(item.poster_path, "w500")}
           alt={title}
@@ -65,12 +65,12 @@ export function MovieCard({ item, onOpenDetails }: MovieCardProps) {
         </div>
 
         {/* Content Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4 space-y-1.5 md:space-y-2">
+        <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4 space-y-1.5 md:space-y-2 p-2">
           {/* Rating and Favorite Button */}
-          <div className="flex items-center gap-1.5 md:gap-2">
+          <div className="flex items-center gap-2 md:gap-2">
             {/* Rating Badge */}
             {item.vote_average > 0 && (
-              <div className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 rounded-md glass-strong">
+              <div className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 rounded-md glass-strong p-2">
                 <Star className="w-2.5 h-2.5 md:w-3 md:h-3 text-yellow-400 fill-yellow-400" />
                 <span className="text-[10px] md:text-xs text-foreground font-medium">{item.vote_average.toFixed(1)}</span>
               </div>
@@ -79,7 +79,7 @@ export function MovieCard({ item, onOpenDetails }: MovieCardProps) {
             {/* Favorite Button */}
             <button
               onClick={handleFavoriteClick}
-              className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 rounded-md glass-strong hover:bg-white/20 transition-colors"
+              className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 rounded-md glass-strong hover:bg-white/20 transition-colors p-2"
             >
               <Heart
                 className={`w-2.5 h-2.5 md:w-3 md:h-3 ${isFavorite(item.id) ? "text-red-500 fill-current" : "text-foreground"
@@ -88,7 +88,7 @@ export function MovieCard({ item, onOpenDetails }: MovieCardProps) {
             </button>
 
             {/* Year Badge */}
-            <div className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 rounded-md glass-strong">
+            <div className="inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 rounded-md glass-strong p-2">
               <span className="text-[10px] md:text-xs text-muted-foreground">{year}</span>
             </div>
           </div>
