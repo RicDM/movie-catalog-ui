@@ -1,8 +1,329 @@
-import { Film, Heart, Menu, Search, X } from "lucide-react";
+import styled from 'styled-components';
+import { Camera, Clapperboard, Film, Heart, Menu, Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useFavorites } from "../contexts/FavoritesContext";
 import { getImageUrl, searchMulti } from "../services/tmdb";
 import type { Movie, TVShow } from "../types/tmdb";
+import { glassEffectStrong, glassEffect } from "../styles/components";
+
+const HeaderContainer = styled.header`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: ${props => props.theme.zIndex.header};
+  ${glassEffectStrong}
+  border-bottom: 1px solid ${props => props.theme.colors.border};
+`;
+
+const HeaderInner = styled.div`
+  max-width: 1536px;
+  margin: 0 auto;
+  padding: 0 1rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 0 2rem;
+  }
+`;
+
+const HeaderContent = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 4rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    height: 5rem;
+  }
+`;
+
+const LogoContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.sm};
+`;
+
+const LogoIcon = styled(Clapperboard)`
+  width: 2rem;
+  height: 2rem;
+  color: ${props => props.theme.colors.primary};
+`;
+
+const LogoText = styled.span`
+  font-size: 1.25rem;
+  font-weight: ${props => props.theme.fontWeight.bold};
+  background: ${props => props.theme.gradients.primary};
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: 1.5rem;
+  }
+`;
+
+const DesktopNav = styled.nav`
+  display: none;
+  align-items: center;
+  gap: 6rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    display: flex;
+  }
+`;
+
+const NavButton = styled.button<{ $active?: boolean }>`
+  color: ${props => props.$active ? props.theme.colors.foreground : props.theme.colors.foregroundMuted};
+  transition: color ${props => props.theme.transitions.normal};
+  font-size: ${props => props.theme.fontSize.xl};
+
+  &:hover {
+    color: ${props => props.theme.colors.primary};
+  }
+`;
+
+const Actions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+`;
+
+const SearchContainer = styled.div`
+  position: relative;
+  display: none;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    display: block;
+  }
+`;
+
+const SearchBar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.sm};
+  padding: 0.5rem 1rem;
+  border-radius: ${props => props.theme.borderRadius.full};
+  ${glassEffect}
+  border: 1px solid ${props => props.theme.colors.border};
+  transition: all ${props => props.theme.transitions.normal};
+
+  &:hover {
+    border-color: ${props => props.theme.colors.primary}80;
+  }
+`;
+
+const SearchIcon = styled(Search)`
+  width: 1rem;
+  height: 1rem;
+  color: ${props => props.theme.colors.foregroundMuted};
+  flex-shrink: 0;
+`;
+
+const SearchInput = styled.input`
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: ${props => props.theme.fontSize.sm};
+  width: 8rem;
+  color: ${props => props.theme.colors.foreground};
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    width: 16rem;
+  }
+
+  &::placeholder {
+    color: ${props => props.theme.colors.foregroundMuted};
+  }
+`;
+
+const ClearButton = styled.button`
+  color: ${props => props.theme.colors.foregroundMuted};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color ${props => props.theme.transitions.normal};
+
+  &:hover {
+    color: ${props => props.theme.colors.foreground};
+  }
+`;
+
+const SearchResults = styled.div`
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  right: 0;
+  ${glassEffectStrong}
+  border-radius: ${props => props.theme.borderRadius.xl};
+  border: 1px solid ${props => props.theme.colors.border};
+  overflow: hidden;
+  max-height: 24rem;
+  overflow-y: auto;
+`;
+
+const SearchResultItem = styled.button`
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: ${props => props.theme.spacing.md};
+  padding: 0.75rem 1rem;
+  text-align: left;
+  transition: background-color ${props => props.theme.transitions.fast};
+
+  &:hover {
+    background-color: ${props => props.theme.colors.accent};
+  }
+`;
+
+const SearchResultImage = styled.img`
+  width: 3rem;
+  height: 4rem;
+  object-fit: cover;
+  border-radius: ${props => props.theme.borderRadius.sm};
+  flex-shrink: 0;
+`;
+
+const SearchResultInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+const SearchResultTitle = styled.p`
+  font-size: ${props => props.theme.fontSize.sm};
+  font-weight: ${props => props.theme.fontWeight.medium};
+  color: ${props => props.theme.colors.foreground};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const SearchResultMeta = styled.p`
+  font-size: ${props => props.theme.fontSize.xs};
+  color: ${props => props.theme.colors.foregroundMuted};
+`;
+
+const EmptyResults = styled.div`
+  padding: 1rem;
+  text-align: center;
+  color: ${props => props.theme.colors.foregroundMuted};
+`;
+
+const FavoritesButton = styled.button<{ $hasItems?: boolean }>`
+  display: none;
+  position: relative;
+  align-items: center;
+  gap: ${props => props.theme.spacing.sm};
+  padding: 0.5rem 1rem;
+  border-radius: ${props => props.theme.borderRadius.full};
+  ${glassEffect}
+  border: 1px solid ${props => props.theme.colors.border};
+  transition: all ${props => props.theme.transitions.normal};
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    display: flex;
+  }
+
+  &:hover {
+    border-color: ${props => props.theme.colors.primary}80;
+  }
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: ${props => props.$hasItems ? props.theme.colors.red : 'currentColor'};
+    ${props => props.$hasItems && `fill: currentColor;`}
+  }
+`;
+
+const FavoritesBadge = styled.span`
+  position: absolute;
+  top: -0.25rem;
+  right: -0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-size: ${props => props.theme.fontSize.xs};
+  border-radius: ${props => props.theme.borderRadius.full};
+  background-color: ${props => props.theme.colors.red};
+  color: white;
+  min-width: 1.25rem;
+  text-align: center;
+`;
+
+const ExploreButton = styled.button`
+  display: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: ${props => props.theme.borderRadius.full};
+  background: ${props => props.theme.gradients.primary};
+  color: ${props => props.theme.colors.primaryForeground};
+  transition: all ${props => props.theme.transitions.normal};
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    display: block;
+  }
+
+  &:hover {
+    box-shadow: ${props => props.theme.shadows.primaryStrong};
+  }
+`;
+
+const MobileMenuButton = styled.button`
+  display: flex;
+  padding: 0.5rem;
+  color: ${props => props.theme.colors.foreground};
+  transition: color ${props => props.theme.transitions.normal};
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    display: none;
+  }
+
+  &:hover {
+    color: ${props => props.theme.colors.primary};
+  }
+
+  svg {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+`;
+
+const MobileMenu = styled.div`
+  display: block;
+  padding: 1rem 0;
+  border-top: 1px solid ${props => props.theme.colors.border};
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    display: none;
+  }
+`;
+
+const MobileMenuContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const MobileNavButton = styled.button<{ $active?: boolean }>`
+  text-align: left;
+  padding: 0.5rem 0;
+  color: ${props => props.$active ? props.theme.colors.foreground : props.theme.colors.foregroundMuted};
+  transition: color ${props => props.theme.transitions.normal};
+
+  &:hover {
+    color: ${props => props.theme.colors.primary};
+  }
+`;
+
+const MobileCTA = styled.button`
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  border-radius: ${props => props.theme.borderRadius.full};
+  background: ${props => props.theme.gradients.primary};
+  color: ${props => props.theme.colors.primaryForeground};
+  transition: all ${props => props.theme.transitions.normal};
+
+  &:hover {
+    box-shadow: ${props => props.theme.shadows.primaryStrong};
+  }
+`;
 
 type SearchResult = Movie | TVShow;
 
@@ -68,260 +389,199 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 glass-strong">
-      <div className="container mx-auto px-4 lg:px-8">
-        <div className="flex items-center justify-between h-16 lg:h-20">
-          {/* Logo */}
-          <div className="flex items-center gap-2">
-            <Film className="w-8 h-8 text-primary" />
-            <span className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-primary to-cyan-400 bg-clip-text text-transparent">
-              CineMax
-            </span>
-          </div>
+    <HeaderContainer>
+      <HeaderInner>
+        <HeaderContent>
+          <LogoContainer>
+            <LogoIcon />
+            <LogoText>RichCine</LogoText>
+          </LogoContainer>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-8">
-            <button
+          <DesktopNav>
+            <NavButton
               onClick={() => onNavigate("home")}
-              className={`transition-colors duration-300 ${currentPage === "home"
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-primary"
-                }`}
+              $active={currentPage === "home"}
             >
               Início
-            </button>
-            <button
+            </NavButton>
+            <NavButton
               onClick={() => onNavigate("catalog")}
-              className={`transition-colors duration-300 ${currentPage === "catalog"
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-primary"
-                }`}
+              $active={currentPage === "catalog"}
             >
               Catálogo
-            </button>
-            <button
-              onClick={() => onNavigate("favorites")}
-              className={`transition-colors duration-300 ${currentPage === "favorites"
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-primary"
-                }`}
-            >
-              Favoritos
-            </button>
-          </nav>
+            </NavButton>
+          </DesktopNav>
 
-          {/* Search and CTA */}
-          <div className="flex items-center gap-4">
-            {/* Search Bar */}
-            <div className="hidden md:block relative" ref={searchRef}>
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full glass border border-border hover:border-primary/50 transition-all duration-300">
-                <Search className="w-4 h-4 text-muted-foreground" />
-                <input
+          <Actions>
+            <SearchContainer ref={searchRef}>
+              <SearchBar>
+                <SearchIcon />
+                <SearchInput
                   type="text"
                   placeholder="Buscar filmes e séries..."
                   value={searchQuery}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
-                  className="bg-transparent border-none outline-none text-sm w-32 lg:w-64 placeholder:text-muted-foreground"
                 />
                 {searchQuery && (
-                  <button onClick={clearSearch} className="text-muted-foreground hover:text-foreground">
-                    <X className="w-4 h-4" />
-                  </button>
+                  <ClearButton onClick={clearSearch}>
+                    <X size={16} />
+                  </ClearButton>
                 )}
-              </div>
+              </SearchBar>
 
-              {/* Search Results Dropdown */}
               {showResults && (
-                <div className="absolute top-full mt-2 left-0 right-0 glass-strong rounded-xl border border-border overflow-hidden max-h-96 overflow-y-auto">
+                <SearchResults>
                   {isSearching ? (
-                    <div className="p-4 text-center text-muted-foreground">
-                      Buscando...
-                    </div>
+                    <EmptyResults>Buscando...</EmptyResults>
                   ) : searchResults.length > 0 ? (
-                    <div className="py-2">
+                    <>
                       {searchResults.map((result) => (
-                        <button
+                        <SearchResultItem
                           key={result.id}
                           onClick={() => {
                             clearSearch();
                             onNavigate("catalog");
                           }}
-                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors duration-200 text-left"
                         >
-                          <img
+                          <SearchResultImage
                             src={getImageUrl(result.poster_path, "w200")}
                             alt={isMovie(result) ? result.title : result.name}
-                            className="w-12 h-16 object-cover rounded"
                           />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">
+                          <SearchResultInfo>
+                            <SearchResultTitle>
                               {isMovie(result) ? result.title : result.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
+                            </SearchResultTitle>
+                            <SearchResultMeta>
                               {isMovie(result)
                                 ? `Filme • ${result.release_date?.split("-")[0] || "N/A"}`
                                 : `Série • ${result.first_air_date?.split("-")[0] || "N/A"}`
                               }
-                            </p>
-                          </div>
-                        </button>
+                            </SearchResultMeta>
+                          </SearchResultInfo>
+                        </SearchResultItem>
                       ))}
-                    </div>
+                    </>
                   ) : (
-                    <div className="p-4 text-center text-muted-foreground">
-                      Nenhum resultado encontrado
-                    </div>
+                    <EmptyResults>Nenhum resultado encontrado</EmptyResults>
                   )}
-                </div>
+                </SearchResults>
               )}
-            </div>
+            </SearchContainer>
 
-            {/* Favorites Button */}
-            <button
+            <FavoritesButton
               onClick={() => onNavigate("favorites")}
-              className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-full glass border border-border hover:border-primary/50 transition-all duration-300 relative"
+              $hasItems={favorites.length > 0}
             >
-              <Heart className={`w-5 h-5 ${favorites.length > 0 ? "text-red-500 fill-current" : ""
-                }`} />
+              <Heart />
               {favorites.length > 0 && (
-                <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-xs rounded-full bg-red-500 text-white min-w-[20px] text-center">
-                  {favorites.length}
-                </span>
+                <FavoritesBadge>{favorites.length}</FavoritesBadge>
               )}
-            </button>
+            </FavoritesButton>
 
-            {/* CTA Button */}
-            <button
-              onClick={() => onNavigate("catalog")}
-              className="hidden lg:block px-6 py-2 rounded-full bg-gradient-to-r from-primary to-cyan-500 text-primary-foreground hover:shadow-lg hover:shadow-primary/50 transition-all duration-300"
-            >
+            <ExploreButton onClick={() => onNavigate("catalog")}>
               Explorar
-            </button>
+            </ExploreButton>
 
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 text-foreground hover:text-primary transition-colors"
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-          </div>
-        </div>
+            <MobileMenuButton onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              <Menu />
+            </MobileMenuButton>
+          </Actions>
+        </HeaderContent>
 
-        {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-border">
-            <div className="flex flex-col gap-4">
-              {/* Mobile Search */}
-              <div className="relative">
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full glass border border-border">
-                  <Search className="w-4 h-4 text-muted-foreground" />
-                  <input
+          <MobileMenu>
+            <MobileMenuContent>
+              <SearchContainer>
+                <SearchBar>
+                  <SearchIcon />
+                  <SearchInput
                     type="text"
                     placeholder="Buscar filmes e séries..."
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
-                    className="bg-transparent border-none outline-none text-sm flex-1 placeholder:text-muted-foreground"
                   />
                   {searchQuery && (
-                    <button onClick={clearSearch} className="text-muted-foreground hover:text-foreground">
-                      <X className="w-4 h-4" />
-                    </button>
+                    <ClearButton onClick={clearSearch}>
+                      <X size={16} />
+                    </ClearButton>
                   )}
-                </div>
+                </SearchBar>
 
-                {/* Mobile Search Results */}
                 {showResults && searchResults.length > 0 && (
-                  <div className="mt-2 glass-strong rounded-xl border border-border overflow-hidden">
-                    <div className="py-2">
-                      {searchResults.map((result) => (
-                        <button
-                          key={result.id}
-                          onClick={() => {
-                            clearSearch();
-                            setMobileMenuOpen(false);
-                            onNavigate("catalog");
-                          }}
-                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-accent transition-colors duration-200 text-left"
-                        >
-                          <img
-                            src={getImageUrl(result.poster_path, "w200")}
-                            alt={isMovie(result) ? result.title : result.name}
-                            className="w-12 h-16 object-cover rounded"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">
-                              {isMovie(result) ? result.title : result.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {isMovie(result)
-                                ? `Filme • ${result.release_date?.split("-")[0] || "N/A"}`
-                                : `Série • ${result.first_air_date?.split("-")[0] || "N/A"}`
-                              }
-                            </p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  <SearchResults>
+                    {searchResults.map((result) => (
+                      <SearchResultItem
+                        key={result.id}
+                        onClick={() => {
+                          clearSearch();
+                          setMobileMenuOpen(false);
+                          onNavigate("catalog");
+                        }}
+                      >
+                        <SearchResultImage
+                          src={getImageUrl(result.poster_path, "w200")}
+                          alt={isMovie(result) ? result.title : result.name}
+                        />
+                        <SearchResultInfo>
+                          <SearchResultTitle>
+                            {isMovie(result) ? result.title : result.name}
+                          </SearchResultTitle>
+                          <SearchResultMeta>
+                            {isMovie(result)
+                              ? `Filme • ${result.release_date?.split("-")[0] || "N/A"}`
+                              : `Série • ${result.first_air_date?.split("-")[0] || "N/A"}`
+                            }
+                          </SearchResultMeta>
+                        </SearchResultInfo>
+                      </SearchResultItem>
+                    ))}
+                  </SearchResults>
                 )}
-              </div>
+              </SearchContainer>
 
-              {/* Mobile Navigation Links */}
-              <nav className="flex flex-col gap-3">
-                <button
+              <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <MobileNavButton
                   onClick={() => {
                     onNavigate("home");
                     setMobileMenuOpen(false);
                   }}
-                  className={`text-left transition-colors duration-300 py-2 ${currentPage === "home"
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-primary"
-                    }`}
+                  $active={currentPage === "home"}
                 >
                   Início
-                </button>
-                <button
+                </MobileNavButton>
+                <MobileNavButton
                   onClick={() => {
                     onNavigate("catalog");
                     setMobileMenuOpen(false);
                   }}
-                  className={`text-left transition-colors duration-300 py-2 ${currentPage === "catalog"
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-primary"
-                    }`}
+                  $active={currentPage === "catalog"}
                 >
                   Catálogo
-                </button>
-                <button
+                </MobileNavButton>
+                <MobileNavButton
                   onClick={() => {
                     onNavigate("favorites");
                     setMobileMenuOpen(false);
                   }}
-                  className={`text-left transition-colors duration-300 py-2 ${currentPage === "favorites"
-                      ? "text-foreground"
-                      : "text-muted-foreground hover:text-primary"
-                    }`}
+                  $active={currentPage === "favorites"}
                 >
                   Favoritos {favorites.length > 0 && `(${favorites.length})`}
-                </button>
+                </MobileNavButton>
               </nav>
 
-              {/* Mobile CTA */}
-              <button
+              <MobileCTA
                 onClick={() => {
                   onNavigate("catalog");
                   setMobileMenuOpen(false);
                 }}
-                className="w-full px-6 py-3 rounded-full bg-gradient-to-r from-primary to-cyan-500 text-primary-foreground hover:shadow-lg hover:shadow-primary/50 transition-all duration-300"
               >
                 Explorar
-              </button>
-            </div>
-          </div>
+              </MobileCTA>
+            </MobileMenuContent>
+          </MobileMenu>
         )}
-      </div>
-    </header>
+      </HeaderInner>
+    </HeaderContainer>
   );
 }

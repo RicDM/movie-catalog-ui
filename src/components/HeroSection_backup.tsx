@@ -1,6 +1,6 @@
+import styled from 'styled-components';
 import { Clock, Info, Play, Star } from "lucide-react";
 import { useEffect, useState } from "react";
-import styled from 'styled-components';
 import {
   formatRuntime,
   getBackdropUrl,
@@ -10,10 +10,10 @@ import {
   getTrendingMovies,
   getYearFromDate
 } from "../services/tmdb";
-import { glassEffect } from "../styles/components";
 import type { Movie, MovieDetails } from "../types/tmdb";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { MovieDetailsModal } from "./MovieDetailsModal";
+import { glassEffect } from "../styles/components";
 
 const HeroContainer = styled.section`
   position: relative;
@@ -52,8 +52,8 @@ const BackgroundImage = styled(ImageWithFallback)`
 const GradientOverlay = styled.div<{ $direction: 'vertical' | 'horizontal' }>`
   position: absolute;
   inset: 0;
-  background: ${props => props.$direction === 'vertical'
-    ? props.theme.gradients.dark
+  background: ${props => props.$direction === 'vertical' 
+    ? props.theme.gradients.dark 
     : props.theme.gradients.darkHorizontal};
 `;
 
@@ -263,13 +263,13 @@ export function HeroSection() {
           const movie = movies[0];
           setFeaturedMovie(movie);
 
-          // Buscar detalhes e vídeos
+          // Buscar detalhes para runtime e gêneros
           const [details, videos] = await Promise.all([
             getMovieDetails(movie.id),
             getMovieVideos(movie.id)
           ]);
           setMovieDetails(details);
-
+          
           // Buscar trailer
           const trailer = getTrailerKey(videos);
           setTrailerKey(trailer);
@@ -303,6 +303,11 @@ export function HeroSection() {
     }
   };
 
+  return (  const backdropUrl = getBackdropUrl(featuredMovie.backdrop_path);
+  const year = getYearFromDate(featuredMovie.release_date);
+  const genres = movieDetails?.genres.map(g => g.name).join(", ") || "Carregando...";
+  const runtime = movieDetails ? formatRuntime(movieDetails.runtime) : "...";
+
   return (
     <HeroContainer>
       <BackgroundWrapper>
@@ -334,20 +339,7 @@ export function HeroSection() {
               <span>{year}</span>
             </InfoBadge>
             <InfoBadge>
-              <span>{genres}</span>
-            </InfoBadge>
-            <InfoBadge>
-              <Clock />
-              <span>{runtime}</span>
-            </InfoBadge>
-            <RatingBadge $highlighted>
-              <Star />
-              <span>{featuredMovie.vote_average.toFixed(1)}</span>
-            </RatingBadge>
-          </InfoContainer>
-
-          <ActionButtons>
-            <PlayButton onClick={handleWatchTrailer} disabled={!trailerKey}>
+              <span>{ge onClick={handleWatchTrailer} disabled={!trailerKey}>
               <Play />
               <span>Assistir Trailer</span>
             </PlayButton>
@@ -367,7 +359,20 @@ export function HeroSection() {
           isOpen={showDetailsModal}
           onClose={() => setShowDetailsModal(false)}
         />
-      )}
+      )}tons>
+            <PlayButton>
+              <Play />
+              <span>Assistir Trailer</span>
+            </PlayButton>
+            <DetailsButton>
+              <Info />
+              <span>Ver Detalhes</span>
+            </DetailsButton>
+          </ActionButtons>
+        </Content>
+      </ContentWrapper>
+
+      <BottomFade />
     </HeroContainer>
   );
 }

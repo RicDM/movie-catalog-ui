@@ -1,4 +1,5 @@
-import { Film, Tv, TrendingUp } from "lucide-react";
+import styled from 'styled-components';
+import { Film, Tv, TrendingUp, FilmIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Filters } from "../components/Filters";
 import { MovieCard } from "../components/MovieCard";
@@ -12,6 +13,173 @@ import {
     getPopularTVShows
 } from "../services/tmdb";
 import type { Movie, TVShow } from "../types/tmdb";
+import { glassEffect } from "../styles/components";
+
+const PageContainer = styled.div`
+  min-height: 100vh;
+  background-color: ${props => props.theme.colors.background};
+  padding-top: 6rem;
+  padding-bottom: 4rem;
+`;
+
+const Container = styled.div`
+  max-width: 1536px;
+  margin: 0 auto;
+  padding: 0 1rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 0 2rem;
+  }
+`;
+
+const Header = styled.div`
+  margin-bottom: 2rem;
+`;
+
+const HeaderRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+`;
+
+const TitleSection = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  svg {
+    width: 2rem;
+    height: 2rem;
+    color: ${props => props.theme.colors.primary};
+  }
+`;
+
+const Title = styled.h1`
+  font-size: 1.875rem;
+  font-weight: ${props => props.theme.fontWeight.bold};
+  color: ${props => props.theme.colors.foreground};
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: 2.25rem;
+  }
+`;
+
+const ToggleContainer = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.25rem;
+  border-radius: ${props => props.theme.borderRadius.full};
+  ${glassEffect}
+  border: 1px solid ${props => props.theme.colors.border};
+`;
+
+const ToggleButton = styled.button<{ $active: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: ${props => props.theme.borderRadius.full};
+  transition: all ${props => props.theme.transitions.slow};
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  span {
+    display: none;
+
+    @media (min-width: ${props => props.theme.breakpoints.sm}) {
+      display: inline;
+    }
+  }
+
+  ${props => props.$active ? `
+    background-color: ${props.theme.colors.primary};
+    color: ${props.theme.colors.primaryForeground};
+    box-shadow: ${props.theme.shadows.lg};
+  ` : `
+    color: ${props.theme.colors.foregroundMuted};
+
+    &:hover {
+      color: ${props.theme.colors.foreground};
+    }
+  `}
+`;
+
+const Subtitle = styled.p`
+  color: ${props => props.theme.colors.foregroundMuted};
+  font-size: ${props => props.theme.fontSize.sm};
+`;
+
+const ResultsCount = styled.div`
+  margin-bottom: 1.5rem;
+  font-size: ${props => props.theme.fontSize.sm};
+  color: ${props => props.theme.colors.foregroundMuted};
+`;
+
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1.5rem;
+  }
+
+  @media (min-width: ${props => props.theme.breakpoints.xl}) {
+    grid-template-columns: repeat(6, 1fr);
+  }
+`;
+
+const LoadingCard = styled.div`
+  aspect-ratio: 2/3;
+  background-color: ${props => props.theme.colors.accent};
+  border-radius: ${props => props.theme.borderRadius.xl};
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+`;
+
+const EmptyState = styled.div`
+  text-align: center;
+  padding: 5rem 0;
+
+  svg {
+    width: 4rem;
+    height: 4rem;
+    color: ${props => props.theme.colors.foregroundMuted};
+    margin: 0 auto 1rem;
+    opacity: 0.5;
+  }
+
+  h3 {
+    font-size: ${props => props.theme.fontSize.xl};
+    font-weight: ${props => props.theme.fontWeight.semibold};
+    color: ${props => props.theme.colors.foreground};
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    color: ${props => props.theme.colors.foregroundMuted};
+  }
+`;
 
 const ITEMS_PER_PAGE = 24;
 
@@ -30,19 +198,17 @@ export function CatalogPage() {
 
     const { movieGenres, tvGenres, getGenreNames, loading: genresLoading } = useGenres();
 
-    // Filtros
     const [selectedGenres, setSelectedGenres] = useState<number[]>([]);
     const [sortBy, setSortBy] = useState("popularity.desc");
     const [yearFrom, setYearFrom] = useState("");
     const [yearTo, setYearTo] = useState("");
     const [ratingMin, setRatingMin] = useState(0);
 
-    // Carregar filmes ou séries com os filtros
     useEffect(() => {
         async function loadContent() {
             try {
                 setLoading(true);
-                setCurrentPage(1); // Resetar para primeira página ao mudar filtros
+                setCurrentPage(1);
 
                 const hasFilters =
                     selectedGenres.length > 0 ||
@@ -55,7 +221,6 @@ export function CatalogPage() {
                     let results: Movie[] = [];
 
                     if (hasFilters) {
-                        // Usar busca avançada com filtros
                         const { results: filteredMovies } = await discoverMoviesAdvanced({
                             genres: selectedGenres,
                             sortBy,
@@ -66,7 +231,6 @@ export function CatalogPage() {
 
                         results = filteredMovies;
                     } else {
-                        // Sem filtros, buscar filmes populares de múltiplas páginas
                         const promises = [];
                         for (let i = 1; i <= 5; i++) {
                             promises.push(getPopularMovies(i));
@@ -81,7 +245,6 @@ export function CatalogPage() {
                     let results: TVShow[] = [];
 
                     if (hasFilters) {
-                        // Usar busca avançada com filtros
                         const { results: filteredTVShows } = await discoverTVShowsAdvanced({
                             genres: selectedGenres,
                             sortBy,
@@ -92,7 +255,6 @@ export function CatalogPage() {
 
                         results = filteredTVShows;
                     } else {
-                        // Sem filtros, buscar séries populares de múltiplas páginas
                         const promises = [];
                         for (let i = 1; i <= 5; i++) {
                             promises.push(getPopularTVShows(i));
@@ -116,7 +278,6 @@ export function CatalogPage() {
         }
     }, [mediaType, selectedGenres, sortBy, yearFrom, yearTo, ratingMin, genresLoading]);
 
-    // Atualizar conteúdo exibido quando a página mudar
     useEffect(() => {
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
         const endIndex = startIndex + ITEMS_PER_PAGE;
@@ -138,65 +299,50 @@ export function CatalogPage() {
     const allItems = mediaType === "movie" ? allMovies : allTVShows;
 
     return (
-        <div className="min-h-screen bg-background mt-64 pt-32 pb-16">
-            <div className="container mx-auto px-4 lg:px-8">
-                {/* Header */}
-                <div className="mb-8">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
-                        <div className="flex items-center gap-3">
-                            {mediaType === "movie" ? (
-                                <Film className="w-8 h-8 text-primary" />
-                            ) : (
-                                <Tv className="w-8 h-8 text-primary" />
-                            )}
-                            <h1 className="text-3xl lg:text-4xl font-bold text-foreground">
+        <PageContainer>
+            <Container>
+                <Header>
+                    <HeaderRow>
+                        <TitleSection>
+                            {mediaType === "movie" ? <Film /> : <Tv />}
+                            <Title>
                                 {mediaType === "movie" ? "Catálogo de Filmes" : "Catálogo de Séries"}
-                            </h1>
-                        </div>
+                            </Title>
+                        </TitleSection>
                         
-                        {/* Toggle Filmes/Séries */}
-                        <div className="flex gap-2 p-1 rounded-full glass border border-border">
-                            <button
+                        <ToggleContainer>
+                            <ToggleButton
                                 onClick={() => {
                                     setMediaType("movie");
                                     setSelectedGenres([]);
                                     setCurrentPage(1);
                                 }}
-                                className={`px-4 py-2 rounded-full transition-all duration-300 flex items-center gap-2 ${
-                                    mediaType === "movie"
-                                        ? "bg-primary text-primary-foreground shadow-lg"
-                                        : "text-muted-foreground hover:text-foreground"
-                                }`}
+                                $active={mediaType === "movie"}
                             >
-                                <Film className="w-4 h-4" />
-                                <span className="hidden sm:inline">Filmes</span>
-                            </button>
-                            <button
+                                <Film />
+                                <span>Filmes</span>
+                            </ToggleButton>
+                            <ToggleButton
                                 onClick={() => {
                                     setMediaType("tv");
                                     setSelectedGenres([]);
                                     setCurrentPage(1);
                                 }}
-                                className={`px-4 py-2 rounded-full transition-all duration-300 flex items-center gap-2 ${
-                                    mediaType === "tv"
-                                        ? "bg-primary text-primary-foreground shadow-lg"
-                                        : "text-muted-foreground hover:text-foreground"
-                                }`}
+                                $active={mediaType === "tv"}
                             >
-                                <Tv className="w-4 h-4" />
-                                <span className="hidden sm:inline">Séries</span>
-                            </button>
-                        </div>
-                    </div>
-                    <p className="text-muted-foreground">
+                                <Tv />
+                                <span>Séries</span>
+                            </ToggleButton>
+                        </ToggleContainer>
+                    </HeaderRow>
+                    <Subtitle>
                         {mediaType === "movie" 
                             ? "Explore nossa coleção completa de filmes"
                             : "Explore nossa coleção completa de séries"
                         }
-                    </p>
-                </div>
+                    </Subtitle>
+                </Header>
 
-                {/* Filters */}
                 {!genresLoading && (
                     <Filters
                         genres={currentGenres}
@@ -215,26 +361,23 @@ export function CatalogPage() {
                     />
                 )}
 
-                {/* Results Count */}
                 {!loading && (
-                    <div className="mb-6 text-sm text-muted-foreground">
+                    <ResultsCount>
                         Mostrando {displayedItems.length} de {allItems.length} resultados
-                    </div>
+                    </ResultsCount>
                 )}
 
-                {/* Loading */}
                 {loading && (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6">
+                    <Grid>
                         {[...Array(24)].map((_, i) => (
-                            <div key={i} className="aspect-[2/3] bg-accent rounded-xl animate-pulse" />
+                            <LoadingCard key={i} />
                         ))}
-                    </div>
+                    </Grid>
                 )}
 
-                {/* Content Grid */}
                 {!loading && displayedItems.length > 0 && (
                     <>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6 mb-8">
+                        <Grid>
                             {displayedItems.map((item) => (
                                 <MovieCard
                                     key={item.id}
@@ -242,9 +385,8 @@ export function CatalogPage() {
                                     onOpenDetails={setSelectedMovie}
                                 />
                             ))}
-                        </div>
+                        </Grid>
 
-                        {/* Pagination */}
                         {totalPages > 1 && (
                             <Pagination
                                 currentPage={currentPage}
@@ -255,21 +397,15 @@ export function CatalogPage() {
                     </>
                 )}
 
-                {/* No Results */}
                 {!loading && displayedItems.length === 0 && (
-                    <div className="text-center py-20">
-                        <TrendingUp className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-                        <h3 className="text-xl font-semibold text-foreground mb-2">
-                            Nenhum resultado encontrado
-                        </h3>
-                        <p className="text-muted-foreground">
-                            Tente ajustar os filtros para ver mais opções
-                        </p>
-                    </div>
+                    <EmptyState>
+                        <TrendingUp />
+                        <h3>Nenhum resultado encontrado</h3>
+                        <p>Tente ajustar os filtros para ver mais opções</p>
+                    </EmptyState>
                 )}
-            </div>
+            </Container>
 
-            {/* Details Modal */}
             {selectedMovie && (
                 <MovieDetailsModal
                     item={selectedMovie}
@@ -277,6 +413,6 @@ export function CatalogPage() {
                     onClose={() => setSelectedMovie(null)}
                 />
             )}
-        </div>
+        </PageContainer>
     );
 }

@@ -1,3 +1,4 @@
+import styled from 'styled-components';
 import { TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useGenres } from "../hooks/useGenres";
@@ -5,6 +6,145 @@ import { getPopularMovies } from "../services/tmdb";
 import type { Movie } from "../types/tmdb";
 import { MovieCard } from "./MovieCard";
 import { MovieDetailsModal } from "./MovieDetailsModal";
+import { glassEffect } from "../styles/components";
+
+const Section = styled.section`
+  padding: 4rem 1rem;
+  position: relative;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 6rem 2rem;
+  }
+`;
+
+const Container = styled.div`
+  max-width: 1536px;
+  margin: 0 auto;
+`;
+
+const Header = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    margin-bottom: 3rem;
+  }
+`;
+
+const HeaderContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const TitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: ${props => props.theme.colors.primary};
+  }
+`;
+
+const Title = styled.h2`
+  font-size: 1.5rem;
+  font-weight: ${props => props.theme.fontWeight.bold};
+  color: ${props => props.theme.colors.foreground};
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: 2.25rem;
+  }
+`;
+
+const Subtitle = styled.p`
+  font-size: 0.875rem;
+  color: ${props => props.theme.colors.foregroundMuted};
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: ${props => props.theme.fontSize.base};
+  }
+`;
+
+const ViewAllButton = styled.button`
+  display: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: ${props => props.theme.borderRadius.full};
+  ${glassEffect}
+  border: 1px solid ${props => props.theme.colors.border};
+  color: ${props => props.theme.colors.foreground};
+  transition: all ${props => props.theme.transitions.normal};
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    display: block;
+  }
+
+  &:hover {
+    border-color: ${props => props.theme.colors.primary}80;
+    color: ${props => props.theme.colors.primary};
+  }
+`;
+
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1.5rem;
+  }
+
+  @media (min-width: ${props => props.theme.breakpoints.xl}) {
+    grid-template-columns: repeat(6, 1fr);
+  }
+`;
+
+const LoadingCard = styled.div`
+  aspect-ratio: 2/3;
+  background-color: ${props => props.theme.colors.accent};
+  border-radius: ${props => props.theme.borderRadius.xl};
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+`;
+
+const MobileViewAll = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    display: none;
+  }
+
+  button {
+    width: 100%;
+    max-width: 24rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: ${props => props.theme.borderRadius.full};
+    ${glassEffect}
+    border: 1px solid ${props => props.theme.colors.border};
+    color: ${props => props.theme.colors.foreground};
+    transition: all ${props => props.theme.transitions.normal};
+
+    &:hover {
+      border-color: ${props => props.theme.colors.primary}80;
+      color: ${props => props.theme.colors.primary};
+    }
+  }
+`;
 
 export function FeaturedMovies() {
   const [movies, setMovies] = useState<Movie[]>([]);
@@ -30,54 +170,42 @@ export function FeaturedMovies() {
 
   if (loading || genresLoading) {
     return (
-      <section className="py-16 lg:py-24 px-4 lg:px-8 relative">
-        <div className="container mx-auto">
-          <div className="flex items-center justify-between mb-8 lg:mb-12">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-6 h-6 text-primary" />
-                <h2 className="text-2xl lg:text-4xl font-bold text-foreground">
-                  Em Alta Agora
-                </h2>
-              </div>
-              <p className="text-sm lg:text-base text-muted-foreground">
-                Os filmes mais populares do momento
-              </p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6">
+      <Section>
+        <Container>
+          <Header>
+            <HeaderContent>
+              <TitleRow>
+                <TrendingUp />
+                <Title>Em Alta Agora</Title>
+              </TitleRow>
+              <Subtitle>Os filmes mais populares do momento</Subtitle>
+            </HeaderContent>
+          </Header>
+          <Grid>
             {[...Array(12)].map((_, i) => (
-              <div key={i} className="aspect-[2/3] bg-accent rounded-xl animate-pulse" />
+              <LoadingCard key={i} />
             ))}
-          </div>
-        </div>
-      </section>
+          </Grid>
+        </Container>
+      </Section>
     );
   }
 
   return (
-    <section className="py-16 lg:py-24 px-4 lg:px-8 relative">
-      <div className="container mx-auto">
-        {/* Section Header */}
-        <div className="flex items-center justify-between mb-8 lg:mb-12">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="w-6 h-6 text-primary" />
-              <h2 className="text-2xl lg:text-4xl font-bold text-foreground">
-                Em Alta Agora
-              </h2>
-            </div>
-            <p className="text-sm lg:text-base text-muted-foreground">
-              Os filmes mais populares do momento
-            </p>
-          </div>
-          <button className="hidden md:block px-6 py-2 rounded-full glass border border-border hover:border-primary/50 text-foreground hover:text-primary transition-all duration-300">
-            Ver Todos
-          </button>
-        </div>
+    <Section>
+      <Container>
+        <Header>
+          <HeaderContent>
+            <TitleRow>
+              <TrendingUp />
+              <Title>Em Alta Agora</Title>
+            </TitleRow>
+            <Subtitle>Os filmes mais populares do momento</Subtitle>
+          </HeaderContent>
+          <ViewAllButton>Ver Todos</ViewAllButton>
+        </Header>
 
-        {/* Movies Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6">
+        <Grid>
           {movies.map((movie) => (
             <MovieCard
               key={movie.id}
@@ -85,17 +213,13 @@ export function FeaturedMovies() {
               onOpenDetails={(item) => setSelectedMovie(item as Movie)}
             />
           ))}
-        </div>
+        </Grid>
 
-        {/* Mobile See All Button */}
-        <div className="md:hidden mt-8 flex justify-center">
-          <button className="w-full max-w-xs px-6 py-3 rounded-full glass border border-border hover:border-primary/50 text-foreground hover:text-primary transition-all duration-300">
-            Ver Todos
-          </button>
-        </div>
-      </div>
+        <MobileViewAll>
+          <button>Ver Todos</button>
+        </MobileViewAll>
+      </Container>
 
-      {/* Details Modal */}
       {selectedMovie && (
         <MovieDetailsModal
           item={selectedMovie}
@@ -103,6 +227,6 @@ export function FeaturedMovies() {
           onClose={() => setSelectedMovie(null)}
         />
       )}
-    </section>
+    </Section>
   );
 }

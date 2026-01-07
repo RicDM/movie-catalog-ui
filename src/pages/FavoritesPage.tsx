@@ -1,3 +1,4 @@
+import styled from 'styled-components';
 import { Heart, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { MovieCard } from "../components/MovieCard";
@@ -6,80 +7,194 @@ import { useFavorites } from "../contexts/FavoritesContext";
 import { useGenres } from "../hooks/useGenres";
 import type { Movie, TVShow } from "../types/tmdb";
 
+const PageContainer = styled.div`
+  min-height: 100vh;
+  background-color: ${props => props.theme.colors.background};
+  padding-top: 6rem;
+  padding-bottom: 4rem;
+`;
+
+const Container = styled.div`
+  max-width: 1536px;
+  margin: 0 auto;
+  padding: 0 1rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 0 2rem;
+  }
+`;
+
+const Header = styled.div`
+  margin-bottom: 2rem;
+`;
+
+const TitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+
+  svg {
+    width: 2rem;
+    height: 2rem;
+    color: ${props => props.theme.colors.red};
+    fill: ${props => props.theme.colors.red};
+  }
+`;
+
+const Title = styled.h1`
+  font-size: 1.875rem;
+  font-weight: ${props => props.theme.fontWeight.bold};
+  color: ${props => props.theme.colors.foreground};
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: 2.25rem;
+  }
+`;
+
+const Subtitle = styled.p`
+  color: ${props => props.theme.colors.foregroundMuted};
+  font-size: ${props => props.theme.fontSize.sm};
+`;
+
+const EmptyState = styled.div`
+  text-align: center;
+  padding: 5rem 0;
+
+  svg {
+    width: 4rem;
+    height: 4rem;
+    color: ${props => props.theme.colors.foregroundMuted};
+    margin: 0 auto 1rem;
+    opacity: 0.5;
+  }
+
+  h3 {
+    font-size: ${props => props.theme.fontSize.xl};
+    font-weight: ${props => props.theme.fontWeight.semibold};
+    color: ${props => props.theme.colors.foreground};
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    color: ${props => props.theme.colors.foregroundMuted};
+  }
+`;
+
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.sm}) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1.5rem;
+  }
+
+  @media (min-width: ${props => props.theme.breakpoints.xl}) {
+    grid-template-columns: repeat(6, 1fr);
+  }
+`;
+
+const CardWrapper = styled.div`
+  position: relative;
+`;
+
+const RemoveButton = styled.button`
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 10;
+  padding: 0.5rem;
+  border-radius: ${props => props.theme.borderRadius.full};
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  opacity: 0;
+  transition: all ${props => props.theme.transitions.normal};
+
+  ${CardWrapper}:hover & {
+    opacity: 1;
+  }
+
+  &:hover {
+    background-color: ${props => props.theme.colors.red};
+  }
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+  }
+`;
+
 export function FavoritesPage() {
-    const { favorites, removeFavorite } = useFavorites();
-    const { getGenreNames } = useGenres();
-    const [selectedItem, setSelectedItem] = useState<(Movie | TVShow) | null>(null);
+  const { favorites, removeFavorite } = useFavorites();
+  const { getGenreNames } = useGenres();
+  const [selectedItem, setSelectedItem] = useState<(Movie | TVShow) | null>(null);
 
-    const isMovie = (item: any): boolean => {
-        return "title" in item;
-    };
+  const isMovie = (item: any): boolean => {
+    return "title" in item;
+  };
 
-    return (
-        <div className="min-h-screen bg-background pt-24 pb-16">
-            <div className="container mx-auto px-4 lg:px-8">
-                {/* Header */}
-                <div className="mb-8">
-                    <div className="flex items-center gap-3 mb-2">
-                        <Heart className="w-8 h-8 text-red-500 fill-current" />
-                        <h1 className="text-3xl lg:text-4xl font-bold text-foreground">
-                            Meus Favoritos
-                        </h1>
-                    </div>
-                    <p className="text-muted-foreground">
-                        {favorites.length} {favorites.length === 1 ? "item salvo" : "itens salvos"}
-                    </p>
-                </div>
+  return (
+    <PageContainer>
+      <Container>
+        <Header>
+          <TitleRow>
+            <Heart />
+            <Title>Meus Favoritos</Title>
+          </TitleRow>
+          <Subtitle>
+            {favorites.length} {favorites.length === 1 ? "item salvo" : "itens salvos"}
+          </Subtitle>
+        </Header>
 
-                {/* Empty State */}
-                {favorites.length === 0 && (
-                    <div className="text-center py-20">
-                        <Heart className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-                        <h3 className="text-xl font-semibold text-foreground mb-2">
-                            Nenhum favorito ainda
-                        </h3>
-                        <p className="text-muted-foreground">
-                            Adicione filmes e séries aos favoritos para vê-los aqui
-                        </p>
-                    </div>
-                )}
+        {favorites.length === 0 && (
+          <EmptyState>
+            <Heart />
+            <h3>Nenhum favorito ainda</h3>
+            <p>Adicione filmes e séries aos favoritos para vê-los aqui</p>
+          </EmptyState>
+        )}
 
-                {/* Favorites Grid */}
-                {favorites.length > 0 && (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 lg:gap-6">
-                        {favorites.map((item) => {
-                            return (
-                                <div key={item.id} className="relative group">
-                                    <MovieCard
-                                        item={item}
-                                        onOpenDetails={setSelectedItem}
-                                    />
-
-                                    {/* Remove Button */}
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            removeFavorite(item.id);
-                                        }}
-                                        className="absolute top-2 right-2 z-10 p-2 rounded-full bg-black/70 hover:bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all duration-300"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
-            </div>
-
-            {/* Details Modal */}
-            {selectedItem && (
-                <MovieDetailsModal
-                    item={selectedItem}
-                    isOpen={!!selectedItem}
-                    onClose={() => setSelectedItem(null)}
+        {favorites.length > 0 && (
+          <Grid>
+            {favorites.map((item) => (
+              <CardWrapper key={item.id}>
+                <MovieCard
+                  item={item}
+                  onOpenDetails={setSelectedItem}
                 />
-            )}
-        </div>
-    );
+
+                <RemoveButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFavorite(item.id);
+                  }}
+                >
+                  <Trash2 />
+                </RemoveButton>
+              </CardWrapper>
+            ))}
+          </Grid>
+        )}
+      </Container>
+
+      {selectedItem && (
+        <MovieDetailsModal
+          item={selectedItem}
+          isOpen={!!selectedItem}
+          onClose={() => setSelectedItem(null)}
+        />
+      )}
+    </PageContainer>
+  );
 }

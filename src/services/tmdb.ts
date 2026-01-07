@@ -1,4 +1,5 @@
 import type {
+    CreditsResponse,
     Genre,
     GenresResponse,
     Movie,
@@ -84,6 +85,10 @@ export async function getMovieVideos(movieId: number): Promise<VideosResponse> {
     return await fetchFromTMDB<VideosResponse>(`/movie/${movieId}/videos`);
 }
 
+export async function getMovieCredits(movieId: number): Promise<CreditsResponse> {
+    return await fetchFromTMDB<CreditsResponse>(`/movie/${movieId}/credits`);
+}
+
 export async function searchMovies(query: string, page: number = 1): Promise<Movie[]> {
     const data = await fetchFromTMDB<TMDBResponse<Movie>>(
         `/search/movie?query=${encodeURIComponent(query)}&page=${page}`
@@ -132,6 +137,10 @@ export async function getAiringTodayTVShows(page: number = 1): Promise<TVShow[]>
 
 export async function getTVShowDetails(tvId: number): Promise<TVShowDetails> {
     return await fetchFromTMDB<TVShowDetails>(`/tv/${tvId}`);
+}
+
+export async function getTVShowCredits(tvId: number): Promise<CreditsResponse> {
+    return await fetchFromTMDB<CreditsResponse>(`/tv/${tvId}/credits`);
 }
 
 export async function getTVShowVideos(tvId: number): Promise<VideosResponse> {
@@ -331,6 +340,16 @@ export function getBackdropUrl(
 ): string {
     if (!path) {
         return "https://via.placeholder.com/1280x720?text=Sem+Imagem";
+    }
+    return `${IMAGE_BASE_URL}/${size}${path}`;
+}
+
+export function getProfileUrl(
+    path: string | null,
+    size: "w45" | "w185" | "h632" | "original" = "w185"
+): string {
+    if (!path) {
+        return "https://via.placeholder.com/185x278?text=Sem+Foto";
     }
     return `${IMAGE_BASE_URL}/${size}${path}`;
 }

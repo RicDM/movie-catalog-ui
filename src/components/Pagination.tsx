@@ -1,80 +1,137 @@
+import styled from 'styled-components';
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { glassEffect } from "../styles/components";
+
+const PaginationContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 3rem;
+`;
+
+const PageButton = styled.button<{ $active?: boolean }>`
+  min-width: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: ${props => props.theme.borderRadius.lg};
+  transition: all ${props => props.theme.transitions.fast};
+  
+  ${props => props.$active ? `
+    background-color: ${props.theme.colors.primary};
+    color: ${props.theme.colors.primaryForeground};
+    box-shadow: ${props.theme.shadows.lg}, 0 0 20px ${props.theme.colors.primary}4D;
+  ` : `
+    ${glassEffect}
+    border: 1px solid ${props.theme.colors.border};
+    color: ${props.theme.colors.foreground};
+
+    &:hover {
+      border-color: ${props.theme.colors.primary}80;
+    }
+  `}
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const NavButton = styled.button`
+  padding: 0.5rem;
+  border-radius: ${props => props.theme.borderRadius.lg};
+  ${glassEffect}
+  border: 1px solid ${props => props.theme.colors.border};
+  transition: all ${props => props.theme.transitions.fast};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover:not(:disabled) {
+    border-color: ${props => props.theme.colors.primary}80;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+`;
+
+const Ellipsis = styled.span`
+  padding: 0.5rem 0.75rem;
+  color: ${props => props.theme.colors.foregroundMuted};
+`;
 
 interface PaginationProps {
-    currentPage: number;
-    totalPages: number;
-    onPageChange: (page: number) => void;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
 }
 
 export function Pagination({ currentPage, totalPages, onPageChange }: PaginationProps) {
-    const maxPages = Math.min(totalPages, 500); // TMDB limita a 500 páginas
-    const pages: (number | string)[] = [];
+  const maxPages = Math.min(totalPages, 500);
+  const pages: (number | string)[] = [];
 
-    if (maxPages <= 7) {
-        for (let i = 1; i <= maxPages; i++) {
-            pages.push(i);
-        }
-    } else {
-        pages.push(1);
+  if (maxPages <= 7) {
+    for (let i = 1; i <= maxPages; i++) {
+      pages.push(i);
+    }
+  } else {
+    pages.push(1);
 
-        if (currentPage > 3) {
-            pages.push("...");
-        }
-
-        const start = Math.max(2, currentPage - 1);
-        const end = Math.min(maxPages - 1, currentPage + 1);
-
-        for (let i = start; i <= end; i++) {
-            pages.push(i);
-        }
-
-        if (currentPage < maxPages - 2) {
-            pages.push("...");
-        }
-
-        pages.push(maxPages);
+    if (currentPage > 3) {
+      pages.push("...");
     }
 
-    return (
-        <div className="flex items-center justify-center gap-2 mt-12">
-            <button
-                onClick={() => onPageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="p-2 rounded-lg glass border border-border disabled:opacity-50 disabled:cursor-not-allowed hover:border-primary/50 transition-colors"
-            >
-                <ChevronLeft className="w-5 h-5" />
-            </button>
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(maxPages - 1, currentPage + 1);
 
-            {pages.map((page, index) => {
-                if (page === "...") {
-                    return (
-                        <span key={`ellipsis-${index}`} className="px-3 py-2 text-muted-foreground">
-                            ...
-                        </span>
-                    );
-                }
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
 
-                return (
-                    <button
-                        key={page}
-                        onClick={() => onPageChange(page as number)}
-                        className={`min-w-[40px] px-3 py-2 rounded-lg transition-all duration-200 ${currentPage === page
-                                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                                : "glass border border-border hover:border-primary/50 text-foreground"
-                            }`}
-                    >
-                        {page}
-                    </button>
-                );
-            })}
+    if (currentPage < maxPages - 2) {
+      pages.push("...");
+    }
 
-            <button
-                onClick={() => onPageChange(currentPage + 1)}
-                disabled={currentPage === maxPages}
-                className="p-2 rounded-lg glass border border-border disabled:opacity-50 disabled:cursor-not-allowed hover:border-primary/50 transition-colors"
-            >
-                <ChevronRight className="w-5 h-5" />
-            </button>
-        </div>
-    );
+    pages.push(maxPages);
+  }
+
+  return (
+    <PaginationContainer>
+      <NavButton
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+      >
+        <ChevronLeft />
+      </NavButton>
+
+      {pages.map((page, index) => {
+        if (page === "...") {
+          return <Ellipsis key={`ellipsis-${index}`}>...</Ellipsis>;
+        }
+
+        return (
+          <PageButton
+            key={page}
+            onClick={() => onPageChange(page as number)}
+            $active={currentPage === page}
+          >
+            {page}
+          </PageButton>
+        );
+      })}
+
+      <NavButton
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === maxPages}
+      >
+        <ChevronRight />
+      </NavButton>
+    </PaginationContainer>
+  );
 }

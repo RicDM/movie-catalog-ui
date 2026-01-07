@@ -1,7 +1,241 @@
+import styled from 'styled-components';
 import { Camera, Film, Ghost, Globe, Heart, Laugh, Sparkles, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getMovieGenres } from "../services/tmdb";
 import type { Genre } from "../types/tmdb";
+import { glassEffect } from "../styles/components";
+
+// Styled Components
+const Section = styled.section`
+  padding: 4rem 1rem;
+  position: relative;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    padding: 5rem 2rem;
+  }
+`;
+
+const Container = styled.div`
+  max-width: 1536px;
+  margin: 0 auto;
+`;
+
+const Header = styled.div`
+  margin-bottom: 2rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    margin-bottom: 3rem;
+  }
+`;
+
+const Title = styled.h2`
+  font-size: 1.5rem;
+  font-weight: ${props => props.theme.fontWeight.bold};
+  color: ${props => props.theme.colors.foreground};
+  margin-bottom: 0.5rem;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: 2.25rem;
+  }
+`;
+
+const Subtitle = styled.p`
+  font-size: 0.875rem;
+  color: ${props => props.theme.colors.foregroundMuted};
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: ${props => props.theme.fontSize.base};
+  }
+`;
+
+const ScrollWrapper = styled.div`
+  position: relative;
+`;
+
+const ScrollContainer = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  scroll-snap-type: x mandatory;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    gap: 1rem;
+  }
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+`;
+
+const GenreButton = styled.button`
+  position: relative;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+`;
+
+const GenreCard = styled.div<{ $gradient: string }>`
+  position: relative;
+  width: 7rem;
+  height: 9rem;
+  border-radius: ${props => props.theme.borderRadius['2xl']};
+  ${glassEffect}
+  border: 1px solid ${props => props.theme.colors.border};
+  overflow: hidden;
+  transition: all ${props => props.theme.transitions.slow};
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    width: 8rem;
+    height: 10rem;
+  }
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    width: 10rem;
+    height: 12rem;
+  }
+
+  &:hover {
+    border-color: ${props => props.theme.colors.primary}80;
+    transform: scale(1.05);
+  }
+`;
+
+const BackgroundGradient = styled.div<{ $gradient: string }>`
+  position: absolute;
+  inset: 0;
+  background: ${props => props.$gradient};
+  opacity: 0.1;
+  transition: opacity ${props => props.theme.transitions.slow};
+
+  ${GenreButton}:hover & {
+    opacity: 0.2;
+  }
+`;
+
+const CardContent = styled.div`
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem;
+`;
+
+const IconCircle = styled.div<{ $gradient: string }>`
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: ${props => props.$gradient};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: ${props => props.theme.shadows.lg};
+  transition: transform ${props => props.theme.transitions.slow};
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    width: 4rem;
+    height: 4rem;
+  }
+
+  ${GenreButton}:hover & {
+    transform: scale(1.1);
+  }
+
+  svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    color: white;
+
+    @media (min-width: ${props => props.theme.breakpoints.lg}) {
+      width: 2rem;
+      height: 2rem;
+    }
+  }
+`;
+
+const GenreName = styled.span`
+  font-size: 0.875rem;
+  font-weight: ${props => props.theme.fontWeight.medium};
+  color: ${props => props.theme.colors.foreground};
+  text-align: center;
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    font-size: ${props => props.theme.fontSize.base};
+  }
+`;
+
+const HoverGlow = styled.div`
+  position: absolute;
+  inset: 0;
+  border-radius: ${props => props.theme.borderRadius['2xl']};
+  opacity: 0;
+  transition: opacity ${props => props.theme.transitions.slow};
+  box-shadow: ${props => props.theme.shadows.xl}, 0 0 40px ${props => props.theme.colors.primary}33;
+
+  ${GenreButton}:hover & {
+    opacity: 1;
+  }
+`;
+
+const ScrollFade = styled.div`
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 1rem;
+  width: 4rem;
+  background: linear-gradient(to left, ${props => props.theme.colors.background}, transparent);
+  pointer-events: none;
+`;
+
+const LoadingCard = styled.div`
+  width: 7rem;
+  height: 9rem;
+  background-color: ${props => props.theme.colors.accent};
+  border-radius: ${props => props.theme.borderRadius['2xl']};
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  flex-shrink: 0;
+
+  @media (min-width: ${props => props.theme.breakpoints.md}) {
+    width: 8rem;
+    height: 10rem;
+  }
+
+  @media (min-width: ${props => props.theme.breakpoints.lg}) {
+    width: 10rem;
+    height: 12rem;
+  }
+`;
+
+// Mapeamento de gradientes CSS para cores Tailwind
+const gradientMap: Record<string, string> = {
+  "from-orange-500 to-red-500": "linear-gradient(to bottom right, #f97316, #ef4444)",
+  "from-purple-500 to-pink-500": "linear-gradient(to bottom right, #a855f7, #ec4899)",
+  "from-pink-500 to-rose-500": "linear-gradient(to bottom right, #ec4899, #f43f5e)",
+  "from-yellow-500 to-orange-500": "linear-gradient(to bottom right, #eab308, #f97316)",
+  "from-cyan-500 to-blue-500": "linear-gradient(to bottom right, #06b6d4, #3b82f6)",
+  "from-green-500 to-emerald-500": "linear-gradient(to bottom right, #22c55e, #10b981)",
+  "from-indigo-500 to-purple-500": "linear-gradient(to bottom right, #6366f1, #a855f7)",
+  "from-teal-500 to-cyan-500": "linear-gradient(to bottom right, #14b8a6, #06b6d4)",
+  "from-pink-400 to-purple-400": "linear-gradient(to bottom right, #f472b6, #c084fc)",
+  "from-red-600 to-orange-600": "linear-gradient(to bottom right, #dc2626, #ea580c)",
+  "from-blue-400 to-cyan-400": "linear-gradient(to bottom right, #60a5fa, #22d3ee)",
+  "from-amber-600 to-yellow-600": "linear-gradient(to bottom right, #d97706, #ca8a04)",
+  "from-pink-500 to-rose-400": "linear-gradient(to bottom right, #ec4899, #fb7185)",
+  "from-indigo-600 to-purple-600": "linear-gradient(to bottom right, #4f46e5, #9333ea)",
+  "from-red-500 to-pink-500": "linear-gradient(to bottom right, #ef4444, #ec4899)",
+  "from-gray-600 to-red-700": "linear-gradient(to bottom right, #4b5563, #b91c1c)",
+  "from-amber-700 to-orange-700": "linear-gradient(to bottom right, #b45309, #c2410c)",
+  "from-gray-500 to-slate-500": "linear-gradient(to bottom right, #6b7280, #64748b)",
+};
 
 // Mapeamento de ícones e cores para gêneros
 const genreIcons: Record<string, { icon: typeof Film; color: string }> = {
@@ -47,86 +281,56 @@ export function GenreCategories() {
 
   if (loading) {
     return (
-      <section className="py-16 lg:py-20 px-4 lg:px-8 relative">
-        <div className="container mx-auto">
-          <div className="mb-8 lg:mb-12">
-            <h2 className="text-2xl lg:text-4xl font-bold text-foreground mb-2">
-              Explorar por Gênero
-            </h2>
-            <p className="text-sm lg:text-base text-muted-foreground">
-              Encontre seu próximo filme favorito
-            </p>
-          </div>
-          <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 hide-scrollbar">
+      <Section>
+        <Container>
+          <Header>
+            <Title>Explorar por Gênero</Title>
+            <Subtitle>Encontre seu próximo filme favorito</Subtitle>
+          </Header>
+          <ScrollContainer>
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="w-28 h-36 md:w-32 md:h-40 lg:w-40 lg:h-48 bg-accent rounded-2xl animate-pulse flex-shrink-0" />
+              <LoadingCard key={i} />
             ))}
-          </div>
-        </div>
-      </section>
+          </ScrollContainer>
+        </Container>
+      </Section>
     );
   }
 
   return (
-    <section className="py-16 lg:py-20 px-4 lg:px-8 relative">
-      <div className="container mx-auto">
-        {/* Section Header */}
-        <div className="mb-8 lg:mb-12">
-          <h2 className="text-2xl lg:text-4xl font-bold text-foreground mb-2">
-            Explorar por Gênero
-          </h2>
-          <p className="text-sm lg:text-base text-muted-foreground">
-            Encontre seu próximo filme favorito
-          </p>
-        </div>
+    <Section>
+      <Container>
+        <Header>
+          <Title>Explorar por Gênero</Title>
+          <Subtitle>Encontre seu próximo filme favorito</Subtitle>
+        </Header>
 
-        {/* Genres Scroll Container */}
-        <div className="relative">
-          <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory hide-scrollbar">
+        <ScrollWrapper>
+          <ScrollContainer>
             {genres.map((genre) => {
               const genreConfig = genreIcons[genre.name] || { icon: Film, color: "from-gray-500 to-slate-500" };
               const Icon = genreConfig.icon;
+              const gradient = gradientMap[genreConfig.color] || gradientMap["from-gray-500 to-slate-500"];
+
               return (
-                <button
-                  key={genre.id}
-                  className="group relative flex-shrink-0 snap-start"
-                >
-                  <div className="relative w-28 h-36 md:w-32 md:h-40 lg:w-40 lg:h-48 rounded-2xl glass border border-border hover:border-primary/50 overflow-hidden transition-all duration-300 hover:scale-105">
-                    {/* Background Gradient */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${genreConfig.color} opacity-10 group-hover:opacity-20 transition-opacity duration-300`} />
-
-                    {/* Content */}
-                    <div className="relative h-full flex flex-col items-center justify-center gap-3 p-4">
-                      <div className={`w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-gradient-to-br ${genreConfig.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                        <Icon className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
-                      </div>
-                      <span className="text-sm lg:text-base font-medium text-foreground text-center">
-                        {genre.name}
-                      </span>
-                    </div>
-
-                    {/* Hover Glow */}
-                    <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-xl shadow-primary/20`} />
-                  </div>
-                </button>
+                <GenreButton key={genre.id}>
+                  <GenreCard $gradient={gradient}>
+                    <BackgroundGradient $gradient={gradient} />
+                    <CardContent>
+                      <IconCircle $gradient={gradient}>
+                        <Icon />
+                      </IconCircle>
+                      <GenreName>{genre.name}</GenreName>
+                    </CardContent>
+                    <HoverGlow />
+                  </GenreCard>
+                </GenreButton>
               );
             })}
-          </div>
-
-          {/* Gradient Fade on Sides */}
-          <div className="absolute top-0 right-0 bottom-4 w-16 bg-gradient-to-l from-background to-transparent pointer-events-none" />
-        </div>
-      </div>
-
-      <style>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
-    </section>
+          </ScrollContainer>
+          <ScrollFade />
+        </ScrollWrapper>
+      </Container>
+    </Section>
   );
 }

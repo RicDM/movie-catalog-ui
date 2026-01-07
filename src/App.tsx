@@ -1,13 +1,22 @@
 import { useState } from "react";
+import styled from 'styled-components';
 import { FeaturedMovies } from "./components/FeaturedMovies";
 import { FeaturedTVShows } from "./components/FeaturedTVShows";
-import { GenreCategories } from "./components/GenreCategories";
 import { Header } from "./components/Header";
 import { HeroSection } from "./components/HeroSection";
 import { NewReleases } from "./components/NewReleases";
 import { FavoritesProvider } from "./contexts/FavoritesContext";
 import { CatalogPage } from "./pages/CatalogPage";
 import { FavoritesPage } from "./pages/FavoritesPage";
+
+const AppContainer = styled.div`
+  min-height: 100vh;
+  background-color: ${props => props.theme.colors.background};
+`;
+
+const MainContent = styled.main`
+  width: 100%;
+`;
 
 type Page = "home" | "catalog" | "favorites";
 
@@ -16,21 +25,21 @@ export default function App() {
 
   return (
     <FavoritesProvider>
-      <div className="min-h-screen bg-background">
+      <AppContainer>
         <Header onNavigate={setCurrentPage} currentPage={currentPage} />
 
         {currentPage === "home" && (
-          <main>
+          <MainContent>
             <HeroSection />
             <FeaturedMovies />
             <FeaturedTVShows />
             <NewReleases />
-          </main>
+          </MainContent>
         )}
 
         {currentPage === "catalog" && <CatalogPage />}
         {currentPage === "favorites" && <FavoritesPage />}
-      </div>
+      </AppContainer>
     </FavoritesProvider>
   );
 }
