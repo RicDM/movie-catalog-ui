@@ -177,29 +177,6 @@
 
 ---
 
-### 🆘 Problemas Comuns
-
-#### Busca não funciona?
-- Verifique se digitou pelo menos 2 caracteres
-- Aguarde ~300ms entre digitações
-- Certifique-se de estar conectado à internet
-
-#### Filme sem trailer?
-- Nem todos os filmes têm trailers disponíveis
-- O modal mostrará "Trailer não disponível" nesse caso
-
-#### Favoritos sumiram?
-- Favoritos são salvos no navegador (localStorage)
-- Se limpar dados do navegador, os favoritos serão perdidos
-- Use sempre o mesmo navegador/dispositivo
-
-#### Imagens não carregam?
-- Aguarde alguns segundos (podem estar sendo carregadas)
-- Verifique sua conexão com a internet
-- Algumas imagens podem não estar disponíveis na API
-
----
-
 ### 💡 Recursos Avançados
 
 #### Múltiplos Filtros
@@ -208,12 +185,6 @@ Combine todos os filtros para buscar exatamente o que quer:
 - Ano: 2015-2024
 - Avaliação: 7.5+
 - Ordenar por: Mais Recentes
-
-#### Exploração por Gênero
-Na página inicial, clique em qualquer categoria de gênero para ver filmes daquela categoria específica.
-
-#### Ver Todos
-Botões "Ver Todos" em várias seções levam ao catálogo filtrado automaticamente.
 
 ---
 
@@ -225,7 +196,3 @@ Botões "Ver Todos" em várias seções levam ao catálogo filtrado automaticame
 - ✅ Todos os navegadores modernos (Chrome, Firefox, Safari, Edge)
 
 ---
-
-**Aproveite seu catálogo de filmes! 🍿🎬**
-
-Se encontrar problemas ou tiver sugestões, considere reportar no GitHub do projeto.

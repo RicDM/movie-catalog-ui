@@ -121,14 +121,3 @@ import type { Movie } from '@/types/tmdb';
 
 ### Serviços
 - `tmdb.ts` - API calls para TMDB
-
-## 🚀 Melhorias Realizadas
-
-✅ Removido pasta `src/pages` duplicada  
-✅ Removido componente `GenreCategories` não utilizado  
-✅ Removido arquivos Vite (`vite-env.d.ts`, `index.css`)  
-✅ Reorganizado `ImageWithFallback` de `figma/` para `components/`  
-✅ Movido documentação para pasta `docs/`  
-✅ Atualizado `.env.example` para Next.js  
-✅ Criado `src/components/index.ts` para barrel exports  
-✅ Estrutura limpa e organizada seguindo Next.js best practices
