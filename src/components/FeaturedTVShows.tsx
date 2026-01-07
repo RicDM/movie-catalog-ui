@@ -1,12 +1,14 @@
-import styled from 'styled-components';
+'use client';
+
 import { Tv } from "lucide-react";
 import { useEffect, useState } from "react";
+import styled from 'styled-components';
 import { useGenres } from "../hooks/useGenres";
 import { getPopularTVShows } from "../services/tmdb";
+import { glassEffect } from "../styles/components";
 import type { Movie, TVShow } from "../types/tmdb";
 import { MovieCard } from "./MovieCard";
 import { MovieDetailsModal } from "./MovieDetailsModal";
-import { glassEffect } from "../styles/components";
 
 const Section = styled.section`
   padding: 4rem 1rem;

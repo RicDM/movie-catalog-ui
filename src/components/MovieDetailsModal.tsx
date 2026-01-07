@@ -1,23 +1,25 @@
+'use client';
+
 import { Bookmark, Calendar, ChevronLeft, ChevronRight, Clock, Heart, Play, Share2, Star, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import styled from 'styled-components';
 import { useFavorites } from "../contexts/FavoritesContext";
 import {
-    formatRuntime,
-    getBackdropUrl,
-    getMovieCredits,
-    getMovieDetails,
-    getMovieVideos,
-    getProfileUrl,
-    getTrailerKey,
-    getTVShowCredits,
-    getTVShowDetails,
-    getTVShowVideos,
-    getYearFromDate
+  formatRuntime,
+  getBackdropUrl,
+  getMovieCredits,
+  getMovieDetails,
+  getMovieVideos,
+  getProfileUrl,
+  getTrailerKey,
+  getTVShowCredits,
+  getTVShowDetails,
+  getTVShowVideos,
+  getYearFromDate
 } from "../services/tmdb";
 import { glassEffect, glassEffectStrong } from "../styles/components";
 import type { Cast, Crew, Movie, MovieDetails, TVShow, TVShowDetails, VideosResponse } from "../types/tmdb";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 const Overlay = styled.div`
   position: fixed;
@@ -631,296 +633,296 @@ const CastCharacter = styled.p`
 `;
 
 function isMovie(item: Movie | TVShow): item is Movie {
-    return "title" in item;
+  return "title" in item;
 }
 
 interface MovieDetailsModalProps {
-    item: Movie | TVShow;
-    isOpen: boolean;
-    onClose: () => void;
+  item: Movie | TVShow;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export function MovieDetailsModal({ item, isOpen, onClose }: MovieDetailsModalProps) {
-    const [details, setDetails] = useState<MovieDetails | TVShowDetails | null>(null);
-    const [videos, setVideos] = useState<VideosResponse | null>(null);
-    const [cast, setCast] = useState<Cast[]>([]);
-    const [director, setDirector] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [showTrailer, setShowTrailer] = useState(false);
-    const castScrollRef = useRef<HTMLDivElement>(null);
-    const [canScrollCastLeft, setCanScrollCastLeft] = useState(false);
-    const [canScrollCastRight, setCanScrollCastRight] = useState(false);
-    const { isFavorite, toggleFavorite } = useFavorites();
+  const [details, setDetails] = useState<MovieDetails | TVShowDetails | null>(null);
+  const [videos, setVideos] = useState<VideosResponse | null>(null);
+  const [cast, setCast] = useState<Cast[]>([]);
+  const [director, setDirector] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showTrailer, setShowTrailer] = useState(false);
+  const castScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollCastLeft, setCanScrollCastLeft] = useState(false);
+  const [canScrollCastRight, setCanScrollCastRight] = useState(false);
+  const { isFavorite, toggleFavorite } = useFavorites();
 
-    const mediaType = isMovie(item) ? "movie" : "tv";
-    const id = item.id;
+  const mediaType = isMovie(item) ? "movie" : "tv";
+  const id = item.id;
 
-    const updateCastScrollButtons = () => {
-        if (castScrollRef.current) {
-            const { scrollLeft, scrollWidth, clientWidth } = castScrollRef.current;
-            setCanScrollCastLeft(scrollLeft > 0);
-            setCanScrollCastRight(scrollLeft < scrollWidth - clientWidth - 10);
+  const updateCastScrollButtons = () => {
+    if (castScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = castScrollRef.current;
+      setCanScrollCastLeft(scrollLeft > 0);
+      setCanScrollCastRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  const scrollCast = (direction: 'left' | 'right') => {
+    if (castScrollRef.current) {
+      const scrollAmount = direction === 'left' ? -300 : 300;
+      castScrollRef.current.scrollBy({
+        left: scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  useEffect(() => {
+    async function loadDetails() {
+      try {
+        setLoading(true);
+        const [detailsData, videosData, creditsData] = await Promise.all([
+          mediaType === "movie" ? getMovieDetails(id) : getTVShowDetails(id),
+          mediaType === "movie" ? getMovieVideos(id) : getTVShowVideos(id),
+          mediaType === "movie" ? getMovieCredits(id) : getTVShowCredits(id),
+        ]);
+        setDetails(detailsData);
+        setVideos(videosData);
+
+        // Buscar diretor (apenas para filmes)
+        if (mediaType === "movie") {
+          const directorData = creditsData.crew.find((member: Crew) => member.job === "Director");
+          setDirector(directorData?.name || null);
+        } else {
+          // Para séries, usar o creator
+          const tvDetails = detailsData as TVShowDetails;
+          setDirector(tvDetails.created_by?.[0]?.name || null);
         }
-    };
-
-    const scrollCast = (direction: 'left' | 'right') => {
-        if (castScrollRef.current) {
-            const scrollAmount = direction === 'left' ? -300 : 300;
-            castScrollRef.current.scrollBy({
-                left: scrollAmount,
-                behavior: 'smooth'
-            });
-        }
-    };
-
-    useEffect(() => {
-        async function loadDetails() {
-            try {
-                setLoading(true);
-                const [detailsData, videosData, creditsData] = await Promise.all([
-                    mediaType === "movie" ? getMovieDetails(id) : getTVShowDetails(id),
-                    mediaType === "movie" ? getMovieVideos(id) : getTVShowVideos(id),
-                    mediaType === "movie" ? getMovieCredits(id) : getTVShowCredits(id),
-                ]);
-                setDetails(detailsData);
-                setVideos(videosData);
-
-                // Buscar diretor (apenas para filmes)
-                if (mediaType === "movie") {
-                    const directorData = creditsData.crew.find((member: Crew) => member.job === "Director");
-                    setDirector(directorData?.name || null);
-                } else {
-                    // Para séries, usar o creator
-                    const tvDetails = detailsData as TVShowDetails;
-                    setDirector(tvDetails.created_by?.[0]?.name || null);
-                }
-                setCast(creditsData.cast.slice(0, 15));
-            } catch (error) {
-                console.error("Erro ao carregar detalhes:", error);
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        if (isOpen) {
-            loadDetails();
-        }
-    }, [id, mediaType, isOpen]);
-
-    useEffect(() => {
-        updateCastScrollButtons();
-        const container = castScrollRef.current;
-        if (container) {
-            container.addEventListener('scroll', updateCastScrollButtons);
-            window.addEventListener('resize', updateCastScrollButtons);
-            return () => {
-                container.removeEventListener('scroll', updateCastScrollButtons);
-                window.removeEventListener('resize', updateCastScrollButtons);
-            };
-        }
-    }, [cast]);
-
-    useEffect(() => {
-        document.body.style.overflow = "hidden";
-        return () => {
-            document.body.style.overflow = "unset";
-        };
-    }, []);
-
-    if (loading || !details) {
-        return (
-            <LoadingOverlay>
-                <LoadingText>Carregando...</LoadingText>
-            </LoadingOverlay>
-        );
+        setCast(creditsData.cast.slice(0, 15));
+      } catch (error) {
+        console.error("Erro ao carregar detalhes:", error);
+      } finally {
+        setLoading(false);
+      }
     }
 
-    const isMovieType = "title" in details;
-    const title = isMovieType ? details.title : details.name;
-    const releaseDate = isMovieType ? details.release_date : details.first_air_date;
-    const runtime = isMovieType ? formatRuntime(details.runtime) : `${details.number_of_seasons} temporadas`;
-    const trailerKey = videos ? getTrailerKey(videos) : null;
+    if (isOpen) {
+      loadDetails();
+    }
+  }, [id, mediaType, isOpen]);
 
+  useEffect(() => {
+    updateCastScrollButtons();
+    const container = castScrollRef.current;
+    if (container) {
+      container.addEventListener('scroll', updateCastScrollButtons);
+      window.addEventListener('resize', updateCastScrollButtons);
+      return () => {
+        container.removeEventListener('scroll', updateCastScrollButtons);
+        window.removeEventListener('resize', updateCastScrollButtons);
+      };
+    }
+  }, [cast]);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
+
+  if (loading || !details) {
     return (
-        <Overlay>
-            <ModalContainer>
-                <ModalContent>
-                    <CloseButton onClick={onClose} aria-label="Fechar">
-                        <X />
-                    </CloseButton>
-
-                    <VideoSection>
-                        <VideoWrapper>
-                            {showTrailer && trailerKey ? (
-                                <TrailerIframe
-                                    src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1`}
-                                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; autoplay"
-                                    allowFullScreen
-                                />
-                            ) : (
-                                <>
-                                    <BackdropImage
-                                        src={getBackdropUrl(details.backdrop_path, "w1280")}
-                                        alt={title}
-                                    />
-                                    <BackdropOverlay />
-
-                                    {trailerKey && (
-                                        <PlayButton
-                                            onClick={() => setShowTrailer(true)}
-                                            aria-label="Assistir trailer"
-                                        >
-                                            <PlayButtonCircle>
-                                                <Play />
-                                            </PlayButtonCircle>
-                                        </PlayButton>
-                                    )}
-                                </>
-                            )}
-                        </VideoWrapper>
-                    </VideoSection>
-
-                    <InfoCard>
-                        <TitleSection>
-                            <TitleContent>
-                                <Title>{title}</Title>
-                                {details.tagline && (
-                                    <Tagline>"{details.tagline}"</Tagline>
-                                )}
-                            </TitleContent>
-
-                            <ActionsRow>
-                                <ActionButton
-                                    onClick={() => toggleFavorite(item, mediaType)}
-                                    $isFavorite={isFavorite(id)}
-                                    aria-label="Favoritar"
-                                >
-                                    <Heart />
-                                </ActionButton>
-                                <ActionButton aria-label="Salvar">
-                                    <Bookmark />
-                                </ActionButton>
-                                <ActionButton aria-label="Compartilhar">
-                                    <Share2 />
-                                </ActionButton>
-                            </ActionsRow>
-                        </TitleSection>
-
-                        <MetaRow>
-                            <RatingBadge $highlighted>
-                                <Star />
-                                <span>{details.vote_average.toFixed(1)}</span>
-                            </RatingBadge>
-                            <MetaBadge>
-                                <Calendar />
-                                <span>{getYearFromDate(releaseDate)}</span>
-                            </MetaBadge>
-                            <MetaBadge>
-                                <Clock />
-                                <span>{runtime}</span>
-                            </MetaBadge>
-                        </MetaRow>
-
-                        <GenreRow>
-                            {details.genres.map((genre) => (
-                                <GenreBadge key={genre.id}>{genre.name}</GenreBadge>
-                            ))}
-                        </GenreRow>
-
-                        <Section>
-                            <SectionTitle>Sinopse</SectionTitle>
-                            <Overview>{details.overview}</Overview>
-                        </Section>
-
-                        <Section>
-                            <SectionTitle>Informações</SectionTitle>
-                            <InfoList>
-                                {director && (
-                                    <InfoItem>
-                                        <span>{isMovieType ? 'Diretor: ' : 'Criador: '}</span>
-                                        <span>{director}</span>
-                                    </InfoItem>
-                                )}
-                                <InfoItem>
-                                    <span>Idioma: </span>
-                                    <span>{details.original_language.toUpperCase()}</span>
-                                </InfoItem>
-                                {isMovieType && 'budget' in details && details.budget > 0 && (
-                                    <InfoItem>
-                                        <span>Orçamento: </span>
-                                        <span>${details.budget.toLocaleString()}</span>
-                                    </InfoItem>
-                                )}
-                                {isMovieType && 'revenue' in details && details.revenue > 0 && (
-                                    <InfoItem>
-                                        <span>Receita: </span>
-                                        <span>${details.revenue.toLocaleString()}</span>
-                                    </InfoItem>
-                                )}
-                                {!isMovieType && 'number_of_episodes' in details && (
-                                    <InfoItem>
-                                        <span>Episódios: </span>
-                                        <span>{details.number_of_episodes}</span>
-                                    </InfoItem>
-                                )}
-                            </InfoList>
-                        </Section>
-
-                        {details.production_companies.length > 0 && (
-                            <Section>
-                                <SectionTitle>Produção</SectionTitle>
-                                <ProductionList>
-                                    {details.production_companies.slice(0, 4).map((company) => (
-                                        <ProductionCompany key={company.id}>
-                                            {company.name}
-                                        </ProductionCompany>
-                                    ))}
-                                </ProductionList>
-                            </Section>
-                        )}
-
-                        {cast.length > 0 && (
-                            <CastSection>
-                                <SectionTitle>Elenco</SectionTitle>
-                                <CastScrollWrapper>
-                                    <CastNavButton
-                                        $direction="left"
-                                        onClick={() => scrollCast('left')}
-                                        disabled={!canScrollCastLeft}
-                                        aria-label="Rolar elenco para esquerda"
-                                    >
-                                        <ChevronLeft />
-                                    </CastNavButton>
-
-                                    <CastScrollContainer ref={castScrollRef}>
-                                        {cast.map((actor) => (
-                                            <CastCard key={actor.id}>
-                                                <CastPhoto>
-                                                    <img
-                                                        src={getProfileUrl(actor.profile_path, "w185")}
-                                                        alt={actor.name}
-                                                    />
-                                                </CastPhoto>
-                                                <CastName title={actor.name}>{actor.name}</CastName>
-                                                <CastCharacter title={actor.character}>{actor.character}</CastCharacter>
-                                            </CastCard>
-                                        ))}
-                                    </CastScrollContainer>
-
-                                    <CastNavButton
-                                        $direction="right"
-                                        onClick={() => scrollCast('right')}
-                                        disabled={!canScrollCastRight}
-                                        aria-label="Rolar elenco para direita"
-                                    >
-                                        <ChevronRight />
-                                    </CastNavButton>
-                                </CastScrollWrapper>
-                            </CastSection>
-                        )}
-                    </InfoCard>
-                </ModalContent>
-            </ModalContainer>
-        </Overlay>
+      <LoadingOverlay>
+        <LoadingText>Carregando...</LoadingText>
+      </LoadingOverlay>
     );
+  }
+
+  const isMovieType = "title" in details;
+  const title = isMovieType ? details.title : details.name;
+  const releaseDate = isMovieType ? details.release_date : details.first_air_date;
+  const runtime = isMovieType ? formatRuntime(details.runtime) : `${details.number_of_seasons} temporadas`;
+  const trailerKey = videos ? getTrailerKey(videos) : null;
+
+  return (
+    <Overlay>
+      <ModalContainer>
+        <ModalContent>
+          <CloseButton onClick={onClose} aria-label="Fechar">
+            <X />
+          </CloseButton>
+
+          <VideoSection>
+            <VideoWrapper>
+              {showTrailer && trailerKey ? (
+                <TrailerIframe
+                  src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1`}
+                  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; autoplay"
+                  allowFullScreen
+                />
+              ) : (
+                <>
+                  <BackdropImage
+                    src={getBackdropUrl(details.backdrop_path, "w1280")}
+                    alt={title}
+                  />
+                  <BackdropOverlay />
+
+                  {trailerKey && (
+                    <PlayButton
+                      onClick={() => setShowTrailer(true)}
+                      aria-label="Assistir trailer"
+                    >
+                      <PlayButtonCircle>
+                        <Play />
+                      </PlayButtonCircle>
+                    </PlayButton>
+                  )}
+                </>
+              )}
+            </VideoWrapper>
+          </VideoSection>
+
+          <InfoCard>
+            <TitleSection>
+              <TitleContent>
+                <Title>{title}</Title>
+                {details.tagline && (
+                  <Tagline>"{details.tagline}"</Tagline>
+                )}
+              </TitleContent>
+
+              <ActionsRow>
+                <ActionButton
+                  onClick={() => toggleFavorite(item, mediaType)}
+                  $isFavorite={isFavorite(id)}
+                  aria-label="Favoritar"
+                >
+                  <Heart />
+                </ActionButton>
+                <ActionButton aria-label="Salvar">
+                  <Bookmark />
+                </ActionButton>
+                <ActionButton aria-label="Compartilhar">
+                  <Share2 />
+                </ActionButton>
+              </ActionsRow>
+            </TitleSection>
+
+            <MetaRow>
+              <RatingBadge $highlighted>
+                <Star />
+                <span>{details.vote_average.toFixed(1)}</span>
+              </RatingBadge>
+              <MetaBadge>
+                <Calendar />
+                <span>{getYearFromDate(releaseDate)}</span>
+              </MetaBadge>
+              <MetaBadge>
+                <Clock />
+                <span>{runtime}</span>
+              </MetaBadge>
+            </MetaRow>
+
+            <GenreRow>
+              {details.genres.map((genre) => (
+                <GenreBadge key={genre.id}>{genre.name}</GenreBadge>
+              ))}
+            </GenreRow>
+
+            <Section>
+              <SectionTitle>Sinopse</SectionTitle>
+              <Overview>{details.overview}</Overview>
+            </Section>
+
+            <Section>
+              <SectionTitle>Informações</SectionTitle>
+              <InfoList>
+                {director && (
+                  <InfoItem>
+                    <span>{isMovieType ? 'Diretor: ' : 'Criador: '}</span>
+                    <span>{director}</span>
+                  </InfoItem>
+                )}
+                <InfoItem>
+                  <span>Idioma: </span>
+                  <span>{details.original_language.toUpperCase()}</span>
+                </InfoItem>
+                {isMovieType && 'budget' in details && details.budget > 0 && (
+                  <InfoItem>
+                    <span>Orçamento: </span>
+                    <span>${details.budget.toLocaleString()}</span>
+                  </InfoItem>
+                )}
+                {isMovieType && 'revenue' in details && details.revenue > 0 && (
+                  <InfoItem>
+                    <span>Receita: </span>
+                    <span>${details.revenue.toLocaleString()}</span>
+                  </InfoItem>
+                )}
+                {!isMovieType && 'number_of_episodes' in details && (
+                  <InfoItem>
+                    <span>Episódios: </span>
+                    <span>{details.number_of_episodes}</span>
+                  </InfoItem>
+                )}
+              </InfoList>
+            </Section>
+
+            {details.production_companies.length > 0 && (
+              <Section>
+                <SectionTitle>Produção</SectionTitle>
+                <ProductionList>
+                  {details.production_companies.slice(0, 4).map((company) => (
+                    <ProductionCompany key={company.id}>
+                      {company.name}
+                    </ProductionCompany>
+                  ))}
+                </ProductionList>
+              </Section>
+            )}
+
+            {cast.length > 0 && (
+              <CastSection>
+                <SectionTitle>Elenco</SectionTitle>
+                <CastScrollWrapper>
+                  <CastNavButton
+                    $direction="left"
+                    onClick={() => scrollCast('left')}
+                    disabled={!canScrollCastLeft}
+                    aria-label="Rolar elenco para esquerda"
+                  >
+                    <ChevronLeft />
+                  </CastNavButton>
+
+                  <CastScrollContainer ref={castScrollRef}>
+                    {cast.map((actor) => (
+                      <CastCard key={actor.id}>
+                        <CastPhoto>
+                          <img
+                            src={getProfileUrl(actor.profile_path, "w185")}
+                            alt={actor.name}
+                          />
+                        </CastPhoto>
+                        <CastName title={actor.name}>{actor.name}</CastName>
+                        <CastCharacter title={actor.character}>{actor.character}</CastCharacter>
+                      </CastCard>
+                    ))}
+                  </CastScrollContainer>
+
+                  <CastNavButton
+                    $direction="right"
+                    onClick={() => scrollCast('right')}
+                    disabled={!canScrollCastRight}
+                    aria-label="Rolar elenco para direita"
+                  >
+                    <ChevronRight />
+                  </CastNavButton>
+                </CastScrollWrapper>
+              </CastSection>
+            )}
+          </InfoCard>
+        </ModalContent>
+      </ModalContainer>
+    </Overlay>
+  );
 }

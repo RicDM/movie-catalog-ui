@@ -10,13 +10,13 @@ import type {
     VideosResponse,
 } from "../types/tmdb";
 
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
+const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 const BASE_URL = "https://api.themoviedb.org/3";
 const IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
 
 if (!API_KEY) {
     console.error(
-        "TMDB API Key não encontrada. Configure a variável VITE_TMDB_API_KEY no arquivo .env"
+        "TMDB API Key não encontrada. Configure a variável NEXT_PUBLIC_TMDB_API_KEY no arquivo .env"
     );
 }
 
@@ -369,11 +369,43 @@ export function formatRuntime(minutes: number | null): string {
 }
 
 export function getTrailerKey(videos: VideosResponse): string | null {
-    const trailer = videos.results.find(
+    // Prioridade 1: Trailer oficial em português (dublado)
+    const ptBRTrailer = videos.results.find(
+        (video) =>
+            video.site === "YouTube" &&
+            video.type === "Trailer" &&
+            video.official &&
+            (video.iso_639_1 === "pt" || video.iso_639_1 === "pt-BR")
+    );
+    if (ptBRTrailer) return ptBRTrailer.key;
+
+    // Prioridade 2: Qualquer vídeo em português
+    const ptVideo = videos.results.find(
+        (video) =>
+            video.site === "YouTube" &&
+            (video.iso_639_1 === "pt" || video.iso_639_1 === "pt-BR")
+    );
+    if (ptVideo) return ptVideo.key;
+
+    // Prioridade 3: Trailer oficial em inglês (legendado)
+    const enTrailer = videos.results.find(
+        (video) =>
+            video.site === "YouTube" &&
+            video.type === "Trailer" &&
+            video.official &&
+            video.iso_639_1 === "en"
+    );
+    if (enTrailer) return enTrailer.key;
+
+    // Prioridade 4: Qualquer trailer oficial
+    const officialTrailer = videos.results.find(
         (video) =>
             video.site === "YouTube" &&
             video.type === "Trailer" &&
             video.official
     );
-    return trailer?.key || videos.results[0]?.key || null;
+    if (officialTrailer) return officialTrailer.key;
+
+    // Último recurso: primeiro vídeo disponível
+    return videos.results[0]?.key || null;
 }

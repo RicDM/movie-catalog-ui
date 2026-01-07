@@ -1,3 +1,5 @@
+'use client';
+
 import { Calendar, ChevronLeft, ChevronRight, Clock, Star } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import styled from 'styled-components';
@@ -9,7 +11,7 @@ import {
 } from "../services/tmdb";
 import { glassEffect } from "../styles/components";
 import type { Movie, MovieDetails } from "../types/tmdb";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { ImageWithFallback } from "./ImageWithFallback";
 import { MovieDetailsModal } from "./MovieDetailsModal";
 
 const Section = styled.section`

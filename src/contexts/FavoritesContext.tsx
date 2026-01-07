@@ -1,3 +1,5 @@
+'use client';
+
 import { createContext, ReactNode, useContext, useEffect, useState } from "react";
 import type { Movie, TVShow } from "../types/tmdb";
 
@@ -14,14 +16,24 @@ interface FavoritesContextType {
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);
 
 export function FavoritesProvider({ children }: { children: ReactNode }) {
-    const [favorites, setFavorites] = useState<MediaItem[]>(() => {
-        const saved = localStorage.getItem("cinemax-favorites");
-        return saved ? JSON.parse(saved) : [];
-    });
+    const [favorites, setFavorites] = useState<MediaItem[]>([]);
+    const [isClient, setIsClient] = useState(false);
 
+    // Carregar favoritos do localStorage após montar no cliente
     useEffect(() => {
-        localStorage.setItem("cinemax-favorites", JSON.stringify(favorites));
-    }, [favorites]);
+        setIsClient(true);
+        const saved = localStorage.getItem("cinemax-favorites");
+        if (saved) {
+            setFavorites(JSON.parse(saved));
+        }
+    }, []);
+
+    // Salvar favoritos no localStorage quando mudar
+    useEffect(() => {
+        if (isClient) {
+            localStorage.setItem("cinemax-favorites", JSON.stringify(favorites));
+        }
+    }, [favorites, isClient]);
 
     const addFavorite = (item: Movie | TVShow, mediaType: "movie" | "tv") => {
         setFavorites((prev) => {

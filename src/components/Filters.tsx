@@ -1,8 +1,10 @@
-import styled from 'styled-components';
+'use client';
+
 import { SlidersHorizontal, X } from "lucide-react";
 import { useState } from "react";
-import type { Genre } from "../types/tmdb";
+import styled from 'styled-components';
 import { glassEffect, glassEffectStrong } from "../styles/components";
+import type { Genre } from "../types/tmdb";
 
 const FiltersWrapper = styled.div`
   margin-bottom: 2rem;

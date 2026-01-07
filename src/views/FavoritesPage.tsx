@@ -1,3 +1,5 @@
+'use client';
+
 import styled from 'styled-components';
 import { Heart, Trash2 } from "lucide-react";
 import { useState } from "react";

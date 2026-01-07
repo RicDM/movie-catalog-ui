@@ -1,10 +1,14 @@
-import styled from 'styled-components';
-import { Camera, Clapperboard, Film, Heart, Menu, Search, X } from "lucide-react";
+'use client';
+
+import { Clapperboard, Heart, Menu, Search, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import styled from 'styled-components';
 import { useFavorites } from "../contexts/FavoritesContext";
 import { getImageUrl, searchMulti } from "../services/tmdb";
+import { glassEffect, glassEffectStrong } from "../styles/components";
 import type { Movie, TVShow } from "../types/tmdb";
-import { glassEffectStrong, glassEffect } from "../styles/components";
+import { MovieDetailsModal } from "./MovieDetailsModal";
 
 const HeaderContainer = styled.header`
   position: fixed;
@@ -95,6 +99,12 @@ const SearchContainer = styled.div`
   @media (min-width: ${props => props.theme.breakpoints.md}) {
     display: block;
   }
+`;
+
+const MobileSearchContainer = styled.div`
+  position: relative;
+  display: block;
+  width: 100%;
 `;
 
 const SearchBar = styled.div`
@@ -331,12 +341,9 @@ function isMovie(result: SearchResult): result is Movie {
   return "title" in result;
 }
 
-interface HeaderProps {
-  onNavigate: (page: "home" | "catalog" | "favorites") => void;
-  currentPage: string;
-}
-
-export function Header({ onNavigate, currentPage }: HeaderProps) {
+export function Header() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { favorites } = useFavorites();
   const [searchQuery, setSearchQuery] = useState("");
@@ -344,6 +351,8 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const [selectedItem, setSelectedItem] = useState<SearchResult | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -388,60 +397,144 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
     setShowResults(false);
   };
 
+  const handleResultClick = (result: SearchResult) => {
+    setSelectedItem(result);
+    setIsModalOpen(true);
+    clearSearch();
+    setMobileMenuOpen(false);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedItem(null);
+  };
+
   return (
-    <HeaderContainer>
-      <HeaderInner>
-        <HeaderContent>
-          <LogoContainer>
-            <LogoIcon />
-            <LogoText>RichCine</LogoText>
-          </LogoContainer>
+    <>
+      <HeaderContainer>
+        <HeaderInner>
+          <HeaderContent>
+            <LogoContainer>
+              <LogoIcon />
+              <LogoText>RichCine</LogoText>
+            </LogoContainer>
 
-          <DesktopNav>
-            <NavButton
-              onClick={() => onNavigate("home")}
-              $active={currentPage === "home"}
-            >
-              Início
-            </NavButton>
-            <NavButton
-              onClick={() => onNavigate("catalog")}
-              $active={currentPage === "catalog"}
-            >
-              Catálogo
-            </NavButton>
-          </DesktopNav>
+            <DesktopNav>
+              <NavButton
+                onClick={() => router.push("/")}
+                $active={pathname === "/"}
+              >
+                Início
+              </NavButton>
+              <NavButton
+                onClick={() => router.push("/catalog")}
+                $active={pathname === "/catalog"}
+              >
+                Catálogo
+              </NavButton>
+            </DesktopNav>
 
-          <Actions>
-            <SearchContainer ref={searchRef}>
-              <SearchBar>
-                <SearchIcon />
-                <SearchInput
-                  type="text"
-                  placeholder="Buscar filmes e séries..."
-                  value={searchQuery}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
-                />
-                {searchQuery && (
-                  <ClearButton onClick={clearSearch}>
-                    <X size={16} />
-                  </ClearButton>
+            <Actions>
+              <SearchContainer ref={searchRef}>
+                <SearchBar>
+                  <SearchIcon />
+                  <SearchInput
+                    type="text"
+                    placeholder="Buscar filmes e séries..."
+                    value={searchQuery}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    onFocus={() => searchQuery.length >= 2 && setShowResults(true)}
+                  />
+                  {searchQuery && (
+                    <ClearButton onClick={clearSearch}>
+                      <X size={16} />
+                    </ClearButton>
+                  )}
+                </SearchBar>
+
+                {showResults && (
+                  <SearchResults>
+                    {isSearching ? (
+                      <EmptyResults>Buscando...</EmptyResults>
+                    ) : searchResults.length > 0 ? (
+                      <>
+                        {searchResults.map((result) => (
+                          <SearchResultItem
+                            key={result.id}
+                            onClick={() => handleResultClick(result)}
+                          >
+                            <SearchResultImage
+                              src={getImageUrl(result.poster_path, "w200")}
+                              alt={isMovie(result) ? result.title : result.name}
+                            />
+                            <SearchResultInfo>
+                              <SearchResultTitle>
+                                {isMovie(result) ? result.title : result.name}
+                              </SearchResultTitle>
+                              <SearchResultMeta>
+                                {isMovie(result)
+                                  ? `Filme • ${result.release_date?.split("-")[0] || "N/A"}`
+                                  : `Série • ${result.first_air_date?.split("-")[0] || "N/A"}`
+                                }
+                              </SearchResultMeta>
+                            </SearchResultInfo>
+                          </SearchResultItem>
+                        ))}
+                      </>
+                    ) : (
+                      <EmptyResults>Nenhum resultado encontrado</EmptyResults>
+                    )}
+                  </SearchResults>
                 )}
-              </SearchBar>
+              </SearchContainer>
 
-              {showResults && (
-                <SearchResults>
-                  {isSearching ? (
-                    <EmptyResults>Buscando...</EmptyResults>
-                  ) : searchResults.length > 0 ? (
-                    <>
+              <FavoritesButton
+                onClick={() => router.push("/favorites")}
+                $hasItems={favorites.length > 0}
+              >
+                <Heart />
+                {favorites.length > 0 && (
+                  <FavoritesBadge>{favorites.length}</FavoritesBadge>
+                )}
+              </FavoritesButton>
+
+              <ExploreButton onClick={() => router.push("/catalog")}>
+                Explorar
+              </ExploreButton>
+
+              <MobileMenuButton onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                <Menu />
+              </MobileMenuButton>
+            </Actions>
+          </HeaderContent>
+
+          {mobileMenuOpen && (
+            <MobileMenu>
+              <MobileMenuContent>
+                <MobileSearchContainer>
+                  <SearchBar>
+                    <SearchIcon />
+                    <SearchInput
+                      type="text"
+                      placeholder="Buscar filmes e séries..."
+                      value={searchQuery}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                    />
+                    {searchQuery && (
+                      <ClearButton onClick={clearSearch}>
+                        <X size={16} />
+                      </ClearButton>
+                    )}
+                  </SearchBar>
+
+                  {showResults && searchResults.length > 0 && (
+                    <SearchResults>
                       {searchResults.map((result) => (
                         <SearchResultItem
                           key={result.id}
                           onClick={() => {
-                            clearSearch();
-                            onNavigate("catalog");
+                            handleResultClick(result);
+                            setMobileMenuOpen(false);
                           }}
                         >
                           <SearchResultImage
@@ -461,127 +554,61 @@ export function Header({ onNavigate, currentPage }: HeaderProps) {
                           </SearchResultInfo>
                         </SearchResultItem>
                       ))}
-                    </>
-                  ) : (
-                    <EmptyResults>Nenhum resultado encontrado</EmptyResults>
+                    </SearchResults>
                   )}
-                </SearchResults>
-              )}
-            </SearchContainer>
+                </MobileSearchContainer>
 
-            <FavoritesButton
-              onClick={() => onNavigate("favorites")}
-              $hasItems={favorites.length > 0}
-            >
-              <Heart />
-              {favorites.length > 0 && (
-                <FavoritesBadge>{favorites.length}</FavoritesBadge>
-              )}
-            </FavoritesButton>
+                <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <MobileNavButton
+                    onClick={() => {
+                      router.push("/");
+                      setMobileMenuOpen(false);
+                    }}
+                    $active={pathname === "/"}
+                  >
+                    Início
+                  </MobileNavButton>
+                  <MobileNavButton
+                    onClick={() => {
+                      router.push("/catalog");
+                      setMobileMenuOpen(false);
+                    }}
+                    $active={pathname === "/catalog"}
+                  >
+                    Catálogo
+                  </MobileNavButton>
+                  <MobileNavButton
+                    onClick={() => {
+                      router.push("/favorites");
+                      setMobileMenuOpen(false);
+                    }}
+                    $active={pathname === "/favorites"}
+                  >
+                    Favoritos {favorites.length > 0 && `(${favorites.length})`}
+                  </MobileNavButton>
+                </nav>
 
-            <ExploreButton onClick={() => onNavigate("catalog")}>
-              Explorar
-            </ExploreButton>
-
-            <MobileMenuButton onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              <Menu />
-            </MobileMenuButton>
-          </Actions>
-        </HeaderContent>
-
-        {mobileMenuOpen && (
-          <MobileMenu>
-            <MobileMenuContent>
-              <SearchContainer>
-                <SearchBar>
-                  <SearchIcon />
-                  <SearchInput
-                    type="text"
-                    placeholder="Buscar filmes e séries..."
-                    value={searchQuery}
-                    onChange={(e) => handleSearchChange(e.target.value)}
-                  />
-                  {searchQuery && (
-                    <ClearButton onClick={clearSearch}>
-                      <X size={16} />
-                    </ClearButton>
-                  )}
-                </SearchBar>
-
-                {showResults && searchResults.length > 0 && (
-                  <SearchResults>
-                    {searchResults.map((result) => (
-                      <SearchResultItem
-                        key={result.id}
-                        onClick={() => {
-                          clearSearch();
-                          setMobileMenuOpen(false);
-                          onNavigate("catalog");
-                        }}
-                      >
-                        <SearchResultImage
-                          src={getImageUrl(result.poster_path, "w200")}
-                          alt={isMovie(result) ? result.title : result.name}
-                        />
-                        <SearchResultInfo>
-                          <SearchResultTitle>
-                            {isMovie(result) ? result.title : result.name}
-                          </SearchResultTitle>
-                          <SearchResultMeta>
-                            {isMovie(result)
-                              ? `Filme • ${result.release_date?.split("-")[0] || "N/A"}`
-                              : `Série • ${result.first_air_date?.split("-")[0] || "N/A"}`
-                            }
-                          </SearchResultMeta>
-                        </SearchResultInfo>
-                      </SearchResultItem>
-                    ))}
-                  </SearchResults>
-                )}
-              </SearchContainer>
-
-              <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <MobileNavButton
+                <MobileCTA
                   onClick={() => {
-                    onNavigate("home");
+                    router.push("/catalog");
                     setMobileMenuOpen(false);
                   }}
-                  $active={currentPage === "home"}
                 >
-                  Início
-                </MobileNavButton>
-                <MobileNavButton
-                  onClick={() => {
-                    onNavigate("catalog");
-                    setMobileMenuOpen(false);
-                  }}
-                  $active={currentPage === "catalog"}
-                >
-                  Catálogo
-                </MobileNavButton>
-                <MobileNavButton
-                  onClick={() => {
-                    onNavigate("favorites");
-                    setMobileMenuOpen(false);
-                  }}
-                  $active={currentPage === "favorites"}
-                >
-                  Favoritos {favorites.length > 0 && `(${favorites.length})`}
-                </MobileNavButton>
-              </nav>
+                  Explorar
+                </MobileCTA>
+              </MobileMenuContent>
+            </MobileMenu>
+          )}
+        </HeaderInner>
+      </HeaderContainer>
 
-              <MobileCTA
-                onClick={() => {
-                  onNavigate("catalog");
-                  setMobileMenuOpen(false);
-                }}
-              >
-                Explorar
-              </MobileCTA>
-            </MobileMenuContent>
-          </MobileMenu>
-        )}
-      </HeaderInner>
-    </HeaderContainer>
+      {selectedItem && (
+        <MovieDetailsModal
+          item={selectedItem}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+        />
+      )}
+    </>
   );
 }

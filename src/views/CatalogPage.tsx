@@ -1,3 +1,5 @@
+'use client';
+
 import styled from 'styled-components';
 import { Film, Tv, TrendingUp, FilmIcon } from "lucide-react";
 import { useEffect, useState } from "react";

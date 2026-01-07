@@ -1,10 +1,12 @@
-import styled from 'styled-components';
+'use client';
+
 import { Heart, Play, Star } from "lucide-react";
 import { useState } from "react";
+import styled from 'styled-components';
 import { useFavorites } from "../contexts/FavoritesContext";
 import { getImageUrl } from "../services/tmdb";
-import type { Movie, TVShow } from "../types/tmdb";
 import { glassEffectStrong } from "../styles/components";
+import type { Movie, TVShow } from "../types/tmdb";
 
 const CardContainer = styled.div`
   position: relative;
